@@ -35,6 +35,7 @@ export async function PATCH(request:NextRequest) {
   if(!id)return NextResponse.json({error:"Utilizador inválido."},{status:400});
   const user=await prisma.user.findFirst({where:{id,organizationId:session.organizationId}});
   if(!user)return NextResponse.json({error:"Utilizador não encontrado."},{status:404});
+  if(body.permissions && user.role==="MANAGER") return NextResponse.json({error:"Os gestores têm acesso total e não podem ter permissões reduzidas por esta matriz."},{status:400});
   if(body.permissions && typeof body.permissions==="object" && !Array.isArray(body.permissions)){
    const entries=Object.entries(body.permissions as Record<string,unknown>);
    if(entries.some(([code,value])=>!permissionCatalog.some(p=>p.code===code)||typeof value!=="boolean"))return NextResponse.json({error:"Permissões inválidas."},{status:400});
