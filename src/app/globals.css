@@ -4,3 +4,30 @@
 @media(max-width:1200px){.sidebar{width:225px}.content{padding:25px 22px 18px}.topbar{padding:0 22px}.stats-grid{gap:10px}.stat-card{padding:13px}.stat-foot{align-items:flex-start;flex-direction:column}.dashboard-grid{grid-template-columns:minmax(0,1.5fr) minmax(240px,.8fr)}td{padding:10px 9px}.team-cell{font-size:8px}}
 @media(max-width:960px){.sidebar{width:72px;padding:22px 9px 12px}.brand{padding:0 8px 25px}.brand>div:nth-child(2),.company-copy,.company-switch>svg,.nav-heading,.nav-item span,.nav-item b,.plan-card,.profile-copy,.profile>svg{display:none}.company-switch{justify-content:center;padding:7px}.nav-item{justify-content:center;padding:0}.nav-item>svg{width:19px;height:19px}.profile{justify-content:center;padding:14px 0 0}.dashboard-grid,.bottom-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.activity-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.activity-item{border-bottom:0}.activity-note{margin-top:3px}}
 @media(max-width:640px){.sidebar{display:none}.topbar{height:57px;padding:0 15px}.breadcrumbs{font-size:10px}.searchbox{display:none}.top-actions{gap:12px}.content{padding:22px 14px}.welcome-row{align-items:flex-start;gap:15px;flex-direction:column}.welcome-row h1{font-size:23px}.primary-button{width:100%;justify-content:center}.demo-banner{align-items:flex-start}.demo-pill{display:none}.section-title-row h2{font-size:13px}.stats-grid{gap:9px}.stat-card{padding:12px}.stat-top{font-size:10px}.stat-icon{width:29px;height:29px}.stat-value{font-size:24px}.stat-foot{font-size:8px}.stat-foot b{font-size:8px}.panel-header{padding:14px}.panel-header p{max-width:220px;line-height:1.5}.table-wrap{overflow-x:auto}table{min-width:650px}.activity-list{display:block}.activity-item{border-bottom:1px solid #f0f2f6}.bottom-grid{gap:12px}.footer{flex-direction:column;line-height:1.6}.schedule-row{gap:8px}.schedule-label{font-size:7px;padding:5px}.resource-copy strong{font-size:9px}}
+
+
+/* Global appearance control and shared dark theme */
+.global-theme-toggle{position:fixed;right:20px;bottom:20px;z-index:1000;display:flex;align-items:center;gap:8px;border:1px solid #dce2ec;border-radius:999px;background:#fff;color:#344054;padding:11px 15px;box-shadow:0 8px 28px #10182824;font-size:11px;font-weight:700}
+.global-theme-toggle:hover{transform:translateY(-1px);box-shadow:0 10px 30px #10182830}
+html.dark-mode{color-scheme:dark;--ink:#e5e7eb;--muted:#aab6c9;--line:#2b374b;--surface:#182234;--bg:#111827;--navy:#e5e7eb}
+html.dark-mode,html.dark-mode body{background:#111827;color:#e5e7eb}
+html.dark-mode .app-shell,html.dark-mode .main-area,html.dark-mode .content,html.dark-mode .orders-page{background:#111827;color:#e5e7eb}
+html.dark-mode .sidebar,html.dark-mode .topbar,html.dark-mode .orders-top{background:#151e2e;border-color:#2b374b;color:#cbd5e1}
+html.dark-mode .brand strong,html.dark-mode .breadcrumbs strong,html.dark-mode .welcome-row h1,html.dark-mode .section-title-row h2,html.dark-mode .panel-header h2,html.dark-mode .stat-value,html.dark-mode .job-title,html.dark-mode .activity-copy p strong,html.dark-mode .schedule-description strong,html.dark-mode .resource-copy strong,html.dark-mode .resource-row>b,html.dark-mode .orders-heading h1,html.dark-mode .orders-form-title h2,html.dark-mode .orders-list-head h2,html.dark-mode .orders-empty b,html.dark-mode .orders-table td:first-child b{color:#e5e7eb}
+html.dark-mode .company-switch,html.dark-mode .stat-card,html.dark-mode .panel,html.dark-mode .orders-form,html.dark-mode .orders-list-panel{background:#182234;border-color:#2b374b}
+html.dark-mode .plan-card{background:#202b3d;border-color:#34415a}
+html.dark-mode .plan-card p,html.dark-mode .subtitle,html.dark-mode .orders-heading p,html.dark-mode .orders-form-title p,html.dark-mode .orders-list-head p,html.dark-mode .orders-form-grid label{color:#aab6c9}
+html.dark-mode .nav-item{color:#aab6c9}
+html.dark-mode .nav-item.active{background:#26345b;color:#aebcff}
+html.dark-mode .nav-item b,html.dark-mode .searchbox kbd{background:#202b3d;color:#c7d2fe}
+html.dark-mode .searchbox,html.dark-mode .date-filter,html.dark-mode .orders-search{background:#151e2e;border-color:#34415a;color:#aab6c9}
+html.dark-mode .orders-form-grid input,html.dark-mode .orders-form-grid select,html.dark-mode .orders-form-grid textarea,html.dark-mode .orders-table select,html.dark-mode .orders-search input{background:#111827;border-color:#3a4960;color:#e5e7eb}
+html.dark-mode thead,html.dark-mode .orders-table th{background:#202b3d}
+html.dark-mode th,html.dark-mode .orders-table th{color:#aab6c9}
+html.dark-mode td,html.dark-mode .orders-table td,html.dark-mode .panel-footer,html.dark-mode .activity-item,html.dark-mode .schedule-row,html.dark-mode .resource-row{border-color:#2b374b}
+html.dark-mode td,html.dark-mode .orders-table td{color:#cbd5e1}
+html.dark-mode .activity-note{background:#202b3d;color:#aab6c9}
+html.dark-mode .orders-back,html.dark-mode .orders-form-title>button{color:#cbd5e1}
+html.dark-mode .orders-table td:first-child small{color:#aab6c9}
+html.dark-mode .global-theme-toggle{background:#202b3d;border-color:#3a4960;color:#e5e7eb}
+@media(max-width:640px){.global-theme-toggle{right:12px;bottom:12px;padding:10px 12px}.global-theme-toggle span{display:none}}
