@@ -8,7 +8,7 @@ function secretKey() {
   if (!secret || secret.length < 32) throw new Error("SESSION_SECRET tem de ter pelo menos 32 caracteres.");
   return new TextEncoder().encode(secret);
 }
-export type SessionUser = { userId: string; organizationId: string; role: string; name: string; email: string };
+export type SessionUser = { userId: string; organizationId: string; role: string; name: string; email: string; mustChangePassword?: boolean };
 export async function createSession(user: SessionUser) {
   return new SignJWT(user).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("8h").sign(secretKey());
 }
@@ -29,7 +29,7 @@ export async function getSession(): Promise<SessionUser | null> {
     select: { id: true, organizationId: true, role: true, name: true, email: true }
   });
   if (!user) return null;
-  return { userId: user.id, organizationId: user.organizationId, role: user.role, name: user.name, email: user.email };
+  return { userId: user.id, organizationId: user.organizationId, role: user.role, name: user.name, email: user.email, mustChangePassword: false };
 }
 export const sessionCookieName = COOKIE_NAME;
 export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
