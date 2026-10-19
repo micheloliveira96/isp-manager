@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "isp_session";
 function secretKey() {
@@ -21,7 +22,14 @@ export async function readToken(token: string): Promise<SessionUser | null> {
 export async function getSession(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(COOKIE_NAME)?.value;
-  return token ? readToken(token) : null;
+  const claims = token ? await readToken(token) : null;
+  if (!claims) return null;
+  const user = await prisma.user.findFirst({
+    where: { id: claims.userId, organizationId: claims.organizationId, active: true, organization: { status: "active" } },
+    select: { id: true, organizationId: true, role: true, name: true, email: true }
+  });
+  if (!user) return null;
+  return { userId: user.id, organizationId: user.organizationId, role: user.role, name: user.name, email: user.email };
 }
 export const sessionCookieName = COOKIE_NAME;
 export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
