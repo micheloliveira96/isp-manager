@@ -15,3 +15,7 @@ html.dark-mode .orders-table th{background:#202b3d;color:#aab6c9}
 html.dark-mode .orders-table td{color:#cbd5e1}
 html.dark-mode .orders-table td:first-child small{color:#aab6c9}
 html.dark-mode .orders-back,html.dark-mode .orders-form-title>button{color:#cbd5e1}
+
+.orders-settings-link{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#59657d;font-size:10px;font-weight:700}
+.orders-cell-sub{display:block;margin-top:4px;color:#929bad;font-size:9px}
+.orders-table{min-width:900px}
