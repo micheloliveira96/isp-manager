@@ -4,7 +4,8 @@ import Link from "next/link";
 import {ArrowLeft,Plus,Users,LoaderCircle,UserRoundCheck,UserRoundX} from "lucide-react";
 import LogoutButton from "../components/LogoutButton";
 import "./users.css";
-type Permission={code:string;label:string};\ntype User={id:string;name:string;email:string;role:string;active:boolean;createdAt:string;permissions:Record<string,boolean>};
+type Permission={code:string;label:string};
+type User={id:string;name:string;email:string;role:string;active:boolean;createdAt:string;permissions:Record<string,boolean>};
 export default function UsersPage(){const[users,setUsers]=useState<User[]>([]);const[permissionCatalog,setPermissionCatalog]=useState<Permission[]>([]);const[selected,setSelected]=useState<User|null>(null);const[permissions,setPermissions]=useState<Record<string,boolean>>({});const[savingPermissions,setSavingPermissions]=useState(false);const[loading,setLoading]=useState(true);const[error,setError]=useState("");const[notice,setNotice]=useState("");const[show,setShow]=useState(false);const[saving,setSaving]=useState(false);const[form,setForm]=useState({name:"",email:"",password:"",role:"ATTENDANT"});
 async function load(){try{const r=await fetch("/api/users",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível carregar utilizadores.");setUsers(d.users);setPermissionCatalog(d.permissionCatalog||[])}catch(e){setError(e instanceof Error?e.message:"Erro")}finally{setLoading(false)}}
 useEffect(()=>{load()},[]);
