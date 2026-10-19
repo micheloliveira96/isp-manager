@@ -21,8 +21,9 @@ export async function POST(request: NextRequest) {
     const kind = body.kind === "team" ? "team" : body.kind === "serviceType" ? "serviceType" : "";
     const name = String(body.name || "").trim().replace(/\s+/g, " ");
     if (!kind || name.length < 2 || name.length > 100) return NextResponse.json({ error: "Indica um nome com 2 a 100 caracteres." }, { status: 400 });
-    const model = kind === "team" ? prisma.serviceTeam : prisma.serviceType;
-    const item = await model.create({ data: { organizationId: session.organizationId, name } });
+    const item = kind === "team"
+      ? await prisma.serviceTeam.create({ data: { organizationId: session.organizationId, name } })
+      : await prisma.serviceType.create({ data: { organizationId: session.organizationId, name } });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "CREATE", entityType: kind === "team" ? "ServiceTeam" : "ServiceType", entityId: item.id, details: { name } } });
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
@@ -41,8 +42,9 @@ export async function DELETE(request: NextRequest) {
     const kind = body.kind === "team" ? "team" : body.kind === "serviceType" ? "serviceType" : "";
     const id = String(body.id || "");
     if (!kind || !id) return NextResponse.json({ error: "Parâmetro inválido." }, { status: 400 });
-    const model = kind === "team" ? prisma.serviceTeam : prisma.serviceType;
-    const item = await model.updateMany({ where: { id, organizationId: session.organizationId, active: true }, data: { active: false } });
+    const item = kind === "team"
+      ? await prisma.serviceTeam.updateMany({ where: { id, organizationId: session.organizationId, active: true }, data: { active: false } })
+      : await prisma.serviceType.updateMany({ where: { id, organizationId: session.organizationId, active: true }, data: { active: false } });
     if (!item.count) return NextResponse.json({ error: "Parâmetro não encontrado." }, { status: 404 });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "DEACTIVATE", entityType: kind === "team" ? "ServiceTeam" : "ServiceType", entityId: id, details: {} } });
     return NextResponse.json({ success: true });
