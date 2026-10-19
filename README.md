@@ -1,57 +1,27 @@
 # ISP Manager
 
-Base inicial para uma plataforma de gestão operacional de provedores de Internet (ISP), preparada para evoluir por módulos e ser instalada num mini-PC/computador dedicado.
+Plataforma de gestão operacional para provedores de Internet, preparada para personalização por empresa e instalação em servidor próprio.
 
-## Estado atual
+## Desenvolvimento
 
-Esta entrega é uma **primeira estrutura visual demonstrativa**. O painel usa dados fictícios. Ainda não existe autenticação real, permissões server-side, persistência funcional de ordens, auditoria de produção ou configuração segura para utilização por um cliente real.
+Requisitos: Node.js 22+ e Docker Desktop.
 
-## Stack
+1. Copie `.env.example` para `.env` e configure uma palavra-passe forte para a base de dados, `SESSION_SECRET` aleatório (mínimo 32 caracteres) e as credenciais iniciais do gestor.
+2. Instale dependências: `npm install`.
+3. Inicie a base de dados: `docker compose up db -d`.
+4. Gere o cliente e aplique a migração: `npx prisma generate` e `npx prisma migrate deploy`.
+5. Crie a empresa e o primeiro gestor: `npm run db:seed`.
+6. Inicie: `npm run dev`.
 
-- Next.js + React + TypeScript
-- PostgreSQL 16 (Docker Compose)
-- Docker para facilitar a instalação
-- Migrações SQL versionadas em `database/migrations`
+## Funcionalidades nesta etapa
 
-## Desenvolvimento local
+- PostgreSQL com modelo multiempresa inicial.
+- Login com sessão assinada e cookie HttpOnly.
+- Identidade visual e dados da empresa guardados na base de dados.
+- Ordens de serviço com persistência, validação e registo de auditoria.
+- Perfis Gestor, Atendente e Técnico; a autorização deve ser aplicada em cada API.
+- Docker Compose com volume persistente; a porta da base de dados não é publicada.
 
-Requisitos: Node.js 22+ e Docker Desktop (para testar também a base de dados).
+## Segurança antes de produção
 
-1. Copie `.env.example` para `.env`.
-2. Altere `POSTGRES_PASSWORD` para uma palavra-passe local forte e atualize `DATABASE_URL` com a mesma palavra-passe.
-3. Instale dependências: `npm install`
-4. Inicie a interface: `npm run dev`
-5. Abra `http://localhost:3000`.
-
-Para iniciar a aplicação e PostgreSQL em contentores, depois de configurar `.env`:
-`docker compose up --build -d`
-
-## Diretrizes de arquitetura
-
-- Todas as tabelas operacionais devem incluir `organization_id` quando aplicável, para preparar isolamento entre empresas.
-- Verificar permissões no servidor e na base de dados; esconder botões na interface não é controlo de segurança.
-- Auditoria é append-only para utilizadores da aplicação; ações sensíveis devem ser registadas.
-- Nunca guardar segredos reais no GitHub.
-- A base de dados não deve ser exposta diretamente à Internet.
-- Preparar backups automáticos e testar a restauração antes de instalar num cliente.
-- O acesso remoto deve usar VPN ou uma solução de acesso seguro e HTTPS.
-
-## Próximos passos
-
-1. Confirmar o ambiente e executar a aplicação.
-2. Implementar autenticação real e criação do primeiro gestor.
-3. Criar empresas, utilizadores, papéis e permissões granulares.
-4. Implementar auditoria server-side.
-5. Implementar ordens de serviço e o fluxo de aprovação.
-6. Adicionar testes, backups e documentação de instalação.
-
-## Estrutura
-
-- `src/app`: páginas e layouts
-- `src/components`: componentes da interface
-- `database/migrations`: esquema inicial versionado
-- `public`: recursos estáticos
-
-
-## Personalização por cliente (white-label)
-A direção do produto é multiempresa, com configurações separadas por provedor. Está prevista uma área **Gestor > Configurações > Identidade visual** onde utilizadores autorizados poderão editar nome comercial, logótipo, favicon, cores, textos e contactos. O esquema inicial para armazenar estas preferências encontra-se em `database/migrations/0002_organization_branding.sql`; o ecrã e as operações seguras ainda serão desenvolvidos.
+Configurar HTTPS e acesso remoto seguro; substituir credenciais iniciais; definir backups fora do servidor e testar restauro; rever permissões e isolamento multiempresa; executar testes de segurança e de recuperação. Não usar dados reais antes dessa validação.
