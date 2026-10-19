@@ -10,7 +10,28 @@ export async function POST(request: NextRequest) {
     const password = String(body.password || "");
     const organizationSlug = String(body.organizationSlug || process.env.DEFAULT_ORGANIZATION_SLUG || "empresa-principal").trim().toLowerCase();
     if (!email || !password || email.length > 200 || password.length > 200) return NextResponse.json({ error: "Introduza email e palavra-passe." }, { status: 400 });
-    const user = await prisma.user.findFirst({ where: { email, active: true, organization: { slug: organizationSlug } }, include: { organization: true } });
+    let user = await prisma.user.findFirst({ where: { email, active: true, organization: { slug: organizationSlug } }, include: { organization: true } });
+    // First-run bootstrap: only the configured admin email + exact server-side initial password may create the first account.
+    if (!user && email === (process.env.INITIAL_ADMIN_EMAIL || "").trim().toLowerCase() && password === process.env.INITIAL_ADMIN_PASSWORD) {
+      const existingCount = await prisma.user.count({ where: { organization: { slug: organizationSlug } } });
+      if (existingCount === 0) {
+        const organization = await prisma.organization.upsert({
+          where: { slug: organizationSlug },
+          update: {},
+          create: { name: process.env.COMPANY_NAME || "ISP Manager", slug: organizationSlug }
+        });
+        const passwordHash = await bcrypt.hash(password, 12);
+        user = await prisma.user.create({
+          data: { organizationId: organization.id, name: process.env.INITIAL_ADMIN_NAME || "Administrador", email, passwordHash, role: "MANAGER", active: true, mustChangePassword: true },
+          include: { organization: true }
+        });
+        await prisma.brandingSettings.upsert({
+          where: { organizationId: organization.id },
+          update: {},
+          create: { organizationId: organization.id, systemName: "ISP Manager", welcomeTitle: "Gestão operacional", welcomeMessage: "Acompanhe a operação da sua equipa." }
+        });
+      }
+    }
     if (!user || user.organization.status !== "active" || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
     }
