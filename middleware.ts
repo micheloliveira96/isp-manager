@@ -8,7 +8,7 @@ async function validSession(token?:string) {
 }
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  if (path.startsWith("/login") || path.startsWith("/api/auth/login") || path.startsWith("/api/auth/logout") || path.startsWith("/_next") || path === "/favicon.ico") return NextResponse.next();
+  if (path.startsWith("/login") || path.startsWith("/api/auth/login") || path.startsWith("/api/auth/logout") || path.startsWith("/api/public/branding") || path.startsWith("/_next") || path === "/favicon.ico") return NextResponse.next();
   if (!(await validSession(request.cookies.get("isp_session")?.value))) {
     if (path.startsWith("/api/")) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
     return NextResponse.redirect(new URL("/login", request.url));
