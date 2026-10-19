@@ -1,0 +1,29 @@
+import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
+
+const COOKIE_NAME = "isp_session";
+function secretKey() {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || secret.length < 32) throw new Error("SESSION_SECRET tem de ter pelo menos 32 caracteres.");
+  return new TextEncoder().encode(secret);
+}
+export type SessionUser = { userId: string; organizationId: string; role: string; name: string; email: string };
+export async function createSession(user: SessionUser) {
+  return new SignJWT(user).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("8h").sign(secretKey());
+}
+export async function readToken(token: string): Promise<SessionUser | null> {
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    if (typeof payload.userId !== "string" || typeof payload.organizationId !== "string" || typeof payload.role !== "string") return null;
+    return { userId: payload.userId, organizationId: payload.organizationId, role: payload.role, name: String(payload.name || ""), email: String(payload.email || "") };
+  } catch { return null; }
+}
+export async function getSession(): Promise<SessionUser | null> {
+  const jar = await cookies();
+  const token = jar.get(COOKIE_NAME)?.value;
+  return token ? readToken(token) : null;
+}
+export const sessionCookieName = COOKIE_NAME;
+export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
+export function canManageBranding(role: string) { return role === "MANAGER"; }
+export function canManageOrders(role: string) { return ["MANAGER", "ATTENDANT"].includes(role); }
