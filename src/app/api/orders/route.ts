@@ -8,7 +8,7 @@ export async function GET() {
   if (!(await hasPermission(session, "orders.view"))) return NextResponse.json({ error: "Não tens permissão para consultar ordens." }, { status: 403 });
   const where = session.role === "TECHNICIAN" ? { organizationId: session.organizationId, assignedTeam: session.name } : { organizationId: session.organizationId };
   const orders = await prisma.serviceOrder.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
-  return NextResponse.json({ orders });
+  return NextResponse.json({ orders: orders.map(({ pppoePassword, ...order }) => order) });
 }
 
 export async function POST(request: NextRequest) {
@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
     const code = "OS-" + new Date().getFullYear() + "-" + stamp + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
     const order = await prisma.serviceOrder.create({ data: { organizationId: session.organizationId, code, title, customerName, phone, pppoeUsername, pppoePassword, address: String(body.address || "").slice(0, 240) || null, description: String(body.description || "").slice(0, 2000) || null, priority: ["LOW", "NORMAL", "HIGH", "URGENT"].includes(body.priority) ? body.priority : "NORMAL", status: "OPEN", assignedTeam: String(body.assignedTeam || "").slice(0, 100) || null, technology, ponPort, scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null, createdById: session.userId } });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "CREATE", entityType: "ServiceOrder", entityId: order.id, details: { code, title, customerName, phone, pppoeUsername, pppoePasswordProvided: Boolean(pppoePassword) } } });
-    return NextResponse.json({ order }, { status: 201 });
+    const { pppoePassword: _hiddenPassword, ...safeOrder } = order;
+    return NextResponse.json({ order: safeOrder }, { status: 201 });
   } catch (error) {
     console.error("Create order failed", error);
     return NextResponse.json({ error: "Não foi possível criar a ordem de serviço." }, { status: 500 });
