@@ -62,6 +62,7 @@ model ServiceOrder {
   code           String
   title          String
   customerName   String
+  phone          String?
   address        String?
   description    String?
   priority       String       @default("NORMAL")
