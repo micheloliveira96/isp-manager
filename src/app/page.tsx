@@ -13,7 +13,7 @@ export default async function Home() {
  const [org,branding,orders,openCount,reviewCount,urgentCount,audit] = await Promise.all([
   prisma.organization.findUnique({where:{id:session.organizationId}}),
   prisma.brandingSettings.findUnique({where:{organizationId:session.organizationId}}),
-  prisma.serviceOrder.findMany({where:{organizationId:session.organizationId},orderBy:{createdAt:"desc"},take:6}),
+  prisma.serviceOrder.findMany({where:{organizationId:session.organizationId},select:{id:true,title:true,code:true,customerName:true,assignedTeam:true,createdAt:true,status:true},orderBy:{createdAt:"desc"},take:6}),
   prisma.serviceOrder.count({where:{organizationId:session.organizationId,status:{in:["OPEN","SCHEDULED","IN_PROGRESS"]}}}),
   prisma.serviceOrder.count({where:{organizationId:session.organizationId,status:"REVIEW"}}),
   prisma.serviceOrder.count({where:{organizationId:session.organizationId,priority:"URGENT",status:{notIn:["COMPLETED","CANCELLED"]}}}),
