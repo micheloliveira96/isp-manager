@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
     if (!user || user.organization.status !== "active" || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
     }
-    const token = await createSession({ userId: user.id, organizationId: user.organizationId, role: user.role, name: user.name, email: user.email });
-    const response = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role }, organization: { name: user.organization.name } });
+    const token = await createSession({ userId: user.id, organizationId: user.organizationId, role: user.role, name: user.name, email: user.email, mustChangePassword: user.mustChangePassword });
+    const response = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, mustChangePassword: user.mustChangePassword }, organization: { name: user.organization.name }, mustChangePassword: user.mustChangePassword });
     response.cookies.set(sessionCookieName, token, sessionCookieOptions);
     await prisma.auditEvent.create({ data: { organizationId: user.organizationId, actorUserId: user.id, action: "LOGIN", entityType: "User", entityId: user.id } });
     return response;
