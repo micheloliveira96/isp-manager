@@ -51,3 +51,7 @@ Para iniciar a aplicação e PostgreSQL em contentores, depois de configurar `.e
 - `src/components`: componentes da interface
 - `database/migrations`: esquema inicial versionado
 - `public`: recursos estáticos
+
+
+## Personalização por cliente (white-label)
+A direção do produto é multiempresa, com configurações separadas por provedor. Está prevista uma área **Gestor > Configurações > Identidade visual** onde utilizadores autorizados poderão editar nome comercial, logótipo, favicon, cores, textos e contactos. O esquema inicial para armazenar estas preferências encontra-se em `database/migrations/0002_organization_branding.sql`; o ecrã e as operações seguras ainda serão desenvolvidos.
