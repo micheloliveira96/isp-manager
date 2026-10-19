@@ -18,11 +18,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const title = String(body.title || "").trim();
+    const technology = ["GPON", "EPON"].includes(body.technology) ? body.technology : null;
+    const ponPort = String(body.ponPort || "").trim().slice(0, 100) || null;
     const customerName = String(body.customerName || "").trim();
-    if (!title || !customerName || title.length > 140 || customerName.length > 140) return NextResponse.json({ error: "Preenche o serviço e o nome do cliente." }, { status: 400 });
+    if (!title || !customerName || title.length > 140 || customerName.length > 140 || !technology) return NextResponse.json({ error: "Preenche o serviço e o nome do cliente." }, { status: 400 });
     const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
     const code = "OS-" + new Date().getFullYear() + "-" + stamp + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
-    const order = await prisma.serviceOrder.create({ data: { organizationId: session.organizationId, code, title, customerName, address: String(body.address || "").slice(0, 240) || null, description: String(body.description || "").slice(0, 2000) || null, priority: ["LOW", "NORMAL", "HIGH", "URGENT"].includes(body.priority) ? body.priority : "NORMAL", status: "OPEN", assignedTeam: String(body.assignedTeam || "").slice(0, 100) || null, scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null, createdById: session.userId } });
+    const order = await prisma.serviceOrder.create({ data: { organizationId: session.organizationId, code, title, customerName, address: String(body.address || "").slice(0, 240) || null, description: String(body.description || "").slice(0, 2000) || null, priority: ["LOW", "NORMAL", "HIGH", "URGENT"].includes(body.priority) ? body.priority : "NORMAL", status: "OPEN", assignedTeam: String(body.assignedTeam || "").slice(0, 100) || null, technology, ponPort, scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null, createdById: session.userId } });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "CREATE", entityType: "ServiceOrder", entityId: order.id, details: { code, title, customerName } } });
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {
