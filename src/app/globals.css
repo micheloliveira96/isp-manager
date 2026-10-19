@@ -31,3 +31,64 @@ html.dark-mode .orders-back,html.dark-mode .orders-form-title>button{color:#cbd5
 html.dark-mode .orders-table td:first-child small{color:#aab6c9}
 html.dark-mode .global-theme-toggle{background:#202b3d;border-color:#3a4960;color:#e5e7eb}
 @media(max-width:640px){.global-theme-toggle{right:12px;bottom:12px;padding:10px 12px}.global-theme-toggle span{display:none}}
+
+
+/* Dark-mode coverage for settings, login and shared interactive states */
+html.dark-mode .brand-settings-shell,
+html.dark-mode .brand-settings-content { background:#111827; color:#e5e7eb; }
+html.dark-mode .brand-settings-topbar,
+html.dark-mode .brand-form-card,
+html.dark-mode .brand-preview-sticky { background:#182234; border-color:#2b374b; color:#e5e7eb; }
+html.dark-mode .brand-back,
+html.dark-mode .brand-breadcrumb,
+html.dark-mode .brand-page-heading h1,
+html.dark-mode .brand-card-heading h2,
+html.dark-mode .brand-field label,
+html.dark-mode .brand-preview-title h2,
+html.dark-mode .brand-preview-greeting h3,
+html.dark-mode .brand-preview-panel-heading b,
+html.dark-mode .brand-preview-row b,
+html.dark-mode .brand-preview-summary>strong { color:#e5e7eb; }
+html.dark-mode .brand-page-heading p,
+html.dark-mode .brand-card-heading p,
+html.dark-mode .brand-field small,
+html.dark-mode .brand-preview-title p,
+html.dark-mode .brand-preview-help,
+html.dark-mode .brand-settings-footer { color:#aab6c9; }
+html.dark-mode .brand-demo-notice,
+html.dark-mode .brand-preview-sidebar,
+html.dark-mode .brand-preview-company,
+html.dark-mode .brand-preview-metrics>div,
+html.dark-mode .brand-preview-panel { background:#202b3d; border-color:#34415a; color:#cbd5e1; }
+html.dark-mode .brand-field input:not([type=color]),
+html.dark-mode .brand-field textarea,
+html.dark-mode .brand-color-input input:not([type=color]) { background:#111827; border-color:#3a4960; color:#e5e7eb; }
+html.dark-mode .brand-preview-window { border-color:#34415a; background:#151e2e; }
+html.dark-mode .brand-preview-main { background:#151e2e; }
+html.dark-mode .brand-preview-topline,
+html.dark-mode .brand-preview-row,
+html.dark-mode .brand-preview-summary { border-color:#2b374b; }
+html.dark-mode .brand-preview-greeting p,
+html.dark-mode .brand-preview-metrics span,
+html.dark-mode .brand-preview-row span,
+html.dark-mode .brand-preview-summary>div { color:#aab6c9; }
+html.dark-mode .login-page,
+html.dark-mode .login-main { background:#111827; color:#e5e7eb; }
+html.dark-mode .login-form-heading h2,
+html.dark-mode .login-form-wrap form label { color:#e5e7eb; }
+html.dark-mode .login-form-heading p { color:#aab6c9; }
+html.dark-mode .login-form-wrap form input { background:#182234; border-color:#3a4960; color:#e5e7eb; }
+html.dark-mode .login-security-note { background:#202b3d; color:#aab6c9; }
+html.dark-mode .dash-welcome p,
+html.dark-mode .dash-empty,
+html.dark-mode .dash-footer { color:#aab6c9; }
+html.dark-mode .dash-empty a { color:#aebcff; }
+html.dark-mode .dash-order-mark { background:#26345b; color:#aebcff; }
+html.dark-mode .orders-settings-link { color:#cbd5e1; }
+html.dark-mode .os-top>div { color:#aab6c9; }
+html.dark-mode .os-error { background:#48272d; color:#fecaca; }
+html.dark-mode .os-notice { background:#173c32; color:#a7f3d0; }
+html.dark-mode .orders-notice { background:#173c32; color:#a7f3d0; }
+html.dark-mode .orders-error { background:#48272d; color:#fecaca; }
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder { color:#8290a7; }
