@@ -28,7 +28,7 @@ export default function Home() {
       <div className="brand"><div className="brand-mark"><Wifi size={21} strokeWidth={2.6}/></div><div><strong>isp<span>manager</span></strong><small>GESTÃO OPERACIONAL</small></div></div>
       <div className="company-switch"><div className="company-symbol">N</div><div className="company-copy"><strong>Netvia Telecom</strong><span>Ambiente de demonstração</span></div><ChevronDown size={15}/></div>
       <nav className="navigation">{navGroups.map(group => <div className="nav-group" key={group.heading}><p className="nav-heading">{group.heading}</p>{group.items.map(item => {const Icon=item.icon;return <a key={item.label} href="#" className={`nav-item ${item.active?"active":""}`}><Icon size={18}/><span>{item.label}</span>{item.badge&&<b>{item.badge}</b>}</a>})}</div>)}</nav>
-      <div className="sidebar-bottom"><a className="nav-item" href="#"><Settings2 size={18}/><span>Configurações</span></a><a className="nav-item" href="#"><CircleHelp size={18}/><span>Ajuda e suporte</span></a>
+      <div className="sidebar-bottom"><a className="nav-item" href="/configuracoes/identidade"><Settings2 size={18}/><span>Configurações</span></a><a className="nav-item" href="#"><CircleHelp size={18}/><span>Ajuda e suporte</span></a>
         <div className="plan-card"><div className="plan-icon"><Zap size={16}/></div><strong>Operação sob controlo</strong><p>Centralize equipas, serviços e recursos num só lugar.</p><button>Conhecer módulos <ArrowRight size={14}/></button></div>
         <div className="profile"><div className="avatar avatar-indigo">MC</div><div className="profile-copy"><strong>Gestor de sistema</strong><span>Administrador · Demonstração</span></div><ChevronDown size={16}/></div>
       </div>
