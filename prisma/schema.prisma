@@ -27,6 +27,7 @@ model User {
   name           String
   email          String
   passwordHash   String
+  mustChangePassword Boolean @default(false)
   role           String       @default("ATTENDANT")
   active         Boolean      @default(true)
   createdAt      DateTime     @default(now())
