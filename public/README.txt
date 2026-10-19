@@ -1,0 +1,1 @@
+Static assets for ISP Manager. Use this directory for non-sensitive public static files.
