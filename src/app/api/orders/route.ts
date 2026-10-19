@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const technology = ["GPON", "EPON"].includes(body.technology) ? body.technology : null;
     const ponPort = String(body.ponPort || "").trim().slice(0, 100) || null;
     const customerName = String(body.customerName || "").trim();
+    const phone = String(body.phone || "").trim().slice(0, 40) || null;
     if (!title || !customerName || title.length > 140 || customerName.length > 140 || !technology) return NextResponse.json({ error: "Preenche o serviço e o nome do cliente." }, { status: 400 });
     const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
     const code = "OS-" + new Date().getFullYear() + "-" + stamp + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
