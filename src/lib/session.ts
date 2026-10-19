@@ -35,3 +35,29 @@ export const sessionCookieName = COOKIE_NAME;
 export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
 export function canManageBranding(role: string) { return role === "MANAGER"; }
 export function canManageOrders(role: string) { return ["MANAGER", "ATTENDANT"].includes(role); }
+
+export const permissionCatalog = [
+  { code: "orders.view", label: "Consultar ordens" },
+  { code: "orders.create", label: "Criar ordens" },
+  { code: "orders.update", label: "Atualizar e atribuir ordens" },
+  { code: "orders.approve", label: "Aprovar e encerrar ordens" },
+  { code: "users.manage", label: "Gerir utilizadores" },
+  { code: "branding.manage", label: "Personalizar a empresa" },
+  { code: "audit.view", label: "Consultar auditoria" }
+] as const;
+
+const roleDefaults: Record<string, string[]> = {
+  MANAGER: permissionCatalog.map(p => p.code),
+  ATTENDANT: ["orders.view", "orders.create", "orders.update"],
+  TECHNICIAN: ["orders.view", "orders.update"]
+};
+
+export async function hasPermission(session: SessionUser, permissionCode: string): Promise<boolean> {
+  if (session.role === "MANAGER") return true;
+  const override = await prisma.userPermission.findUnique({
+    where: { userId_permissionCode: { userId: session.userId, permissionCode } },
+    select: { allowed: true }
+  });
+  if (override) return override.allowed;
+  return (roleDefaults[session.role] || []).includes(permissionCode);
+}
