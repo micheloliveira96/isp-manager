@@ -9,7 +9,7 @@ export async function GET() {
     prisma.organization.findUnique({ where: { id: session.organizationId }, select: { name: true } }),
     prisma.brandingSettings.findUnique({ where: { organizationId: session.organizationId } })
   ]);
-  return NextResponse.json({ organization, branding });
+  return NextResponse.json({ organization, branding, canEdit: await hasPermission(session, "branding.manage") });
 }
 
 export async function PUT(request: NextRequest) {
