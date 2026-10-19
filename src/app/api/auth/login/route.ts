@@ -8,8 +8,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
+    const organizationSlug = String(body.organizationSlug || process.env.DEFAULT_ORGANIZATION_SLUG || "empresa-principal").trim().toLowerCase();
     if (!email || !password || email.length > 200 || password.length > 200) return NextResponse.json({ error: "Introduza email e palavra-passe." }, { status: 400 });
-    const user = await prisma.user.findFirst({ where: { email, active: true }, include: { organization: true } });
+    const user = await prisma.user.findFirst({ where: { email, active: true, organization: { slug: organizationSlug } }, include: { organization: true } });
     if (!user || user.organization.status !== "active" || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
     }
