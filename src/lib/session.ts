@@ -33,9 +33,6 @@ export async function getSession(): Promise<SessionUser | null> {
 }
 export const sessionCookieName = COOKIE_NAME;
 export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
-export function canManageBranding(role: string) { return role === "MANAGER"; }
-export function canManageOrders(role: string) { return ["MANAGER", "ATTENDANT"].includes(role); }
-
 export const permissionCatalog = [
   { code: "orders.view", label: "Consultar ordens" },
   { code: "orders.create", label: "Criar ordens" },
