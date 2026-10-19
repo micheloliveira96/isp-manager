@@ -63,6 +63,8 @@ model ServiceOrder {
   title          String
   customerName   String
   phone          String?
+  pppoeUsername  String?
+  pppoePassword  String?
   address        String?
   description    String?
   priority       String       @default("NORMAL")
