@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getSession } from "@/lib/session";
+import { getSession, permissionCatalog } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 const ROLES = ["MANAGER", "ATTENDANT", "TECHNICIAN"];
+const defaults:Record<string,string[]>={MANAGER:permissionCatalog.map(p=>p.code),ATTENDANT:["orders.view","orders.create","orders.update"],TECHNICIAN:["orders.view","orders.update"]};
 export async function GET() {
  const session=await getSession();
  if(!session)return NextResponse.json({error:"Sessão necessária."},{status:401});
  if(session.role!=="MANAGER")return NextResponse.json({error:"Apenas o gestor pode gerir utilizadores."},{status:403});
- const users=await prisma.user.findMany({where:{organizationId:session.organizationId},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true},orderBy:{createdAt:"desc"}});
- return NextResponse.json({users});
+ const raw=await prisma.user.findMany({where:{organizationId:session.organizationId},include:{permissions:true},orderBy:{createdAt:"desc"}});
+ const users=raw.map(u=>{const effective=new Map((defaults[u.role]||[]).map(code=>[code,true]));for(const p of u.permissions)effective.set(p.permissionCode,p.allowed);return{id:u.id,name:u.name,email:u.email,role:u.role,active:u.active,createdAt:u.createdAt,permissions:Object.fromEntries(effective)}});
+ return NextResponse.json({users,permissionCatalog});
 }
 export async function POST(request:NextRequest) {
  const session=await getSession();
@@ -29,11 +31,20 @@ export async function PATCH(request:NextRequest) {
  if(!session)return NextResponse.json({error:"Sessão necessária."},{status:401});
  if(session.role!=="MANAGER")return NextResponse.json({error:"Apenas o gestor pode alterar utilizadores."},{status:403});
  try{
-  const body=await request.json();const id=String(body.id||"");const active=body.active;
-  if(!id||typeof active!=="boolean")return NextResponse.json({error:"Dados inválidos."},{status:400});
-  if(id===session.userId&&!active)return NextResponse.json({error:"Não podes desativar a tua própria conta."},{status:400});
+  const body=await request.json();const id=String(body.id||"");
+  if(!id)return NextResponse.json({error:"Utilizador inválido."},{status:400});
   const user=await prisma.user.findFirst({where:{id,organizationId:session.organizationId}});
   if(!user)return NextResponse.json({error:"Utilizador não encontrado."},{status:404});
+  if(body.permissions && typeof body.permissions==="object" && !Array.isArray(body.permissions)){
+   const entries=Object.entries(body.permissions as Record<string,unknown>);
+   if(entries.some(([code,value])=>!permissionCatalog.some(p=>p.code===code)||typeof value!=="boolean"))return NextResponse.json({error:"Permissões inválidas."},{status:400});
+   await prisma.$transaction(entries.map(([permissionCode,allowed])=>prisma.userPermission.upsert({where:{userId_permissionCode:{userId:id,permissionCode}},update:{allowed:allowed as boolean},create:{userId:id,permissionCode,allowed:allowed as boolean}})));
+   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_PERMISSIONS",entityType:"User",entityId:id,details:{permissions:body.permissions}}});
+   return NextResponse.json({ok:true});
+  }
+  const active=body.active;
+  if(typeof active!=="boolean")return NextResponse.json({error:"Dados inválidos."},{status:400});
+  if(id===session.userId&&!active)return NextResponse.json({error:"Não podes desativar a tua própria conta."},{status:400});
   const updated=await prisma.user.update({where:{id},data:{active},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true}});
   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:active?"ENABLE_USER":"DISABLE_USER",entityType:"User",entityId:id,details:{email:user.email,active}}});
   return NextResponse.json({user:updated});
