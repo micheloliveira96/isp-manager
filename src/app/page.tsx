@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { Activity, ArrowRight, CalendarDays, ClipboardList, HardHat, Package, Settings2, ShieldCheck, Truck, Wifi, Users } from "lucide-react";
@@ -8,7 +9,7 @@ import "./dashboard.css";
 export const dynamic = "force-dynamic";
 export default async function Home() {
  const session = await getSession();
- if (!session) return null;
+ if (!session) redirect("/login");
  const [org,branding,orders,openCount,reviewCount,urgentCount,audit] = await Promise.all([
   prisma.organization.findUnique({where:{id:session.organizationId}}),
   prisma.brandingSettings.findUnique({where:{organizationId:session.organizationId}}),
