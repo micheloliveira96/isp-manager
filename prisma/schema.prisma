@@ -32,6 +32,7 @@ model User {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   auditEvents    AuditEvent[]
+  permissions    UserPermission[]
   @@unique([organizationId, email])
   @@index([organizationId, role])
 }
@@ -84,4 +85,16 @@ model AuditEvent {
   details        Json?
   createdAt      DateTime     @default(now())
   @@index([organizationId, createdAt])
+}
+
+model UserPermission {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionCode String
+  allowed        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([userId, permissionCode])
+  @@index([userId])
 }
