@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, canManageOrders } from "@/lib/session";
+import { getSession, hasPermission } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
+  if (!(await hasPermission(session, "orders.view"))) return NextResponse.json({ error: "Não tens permissão para consultar ordens." }, { status: 403 });
   const where = session.role === "TECHNICIAN" ? { organizationId: session.organizationId, assignedTeam: session.name } : { organizationId: session.organizationId };
   const orders = await prisma.serviceOrder.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
   return NextResponse.json({ orders });
@@ -13,7 +14,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
-  if (!canManageOrders(session.role)) return NextResponse.json({ error: "Não tens permissão para criar ordens." }, { status: 403 });
+  if (!(await hasPermission(session, "orders.create"))) return NextResponse.json({ error: "Não tens permissão para criar ordens." }, { status: 403 });
   try {
     const body = await request.json();
     const title = String(body.title || "").trim();
