@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id          String            @id @default(cuid())
+  name        String
+  slug        String            @unique
+  status      String            @default("active")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  users       User[]
+  orders      ServiceOrder[]
+  branding    BrandingSettings?
+  auditEvents AuditEvent[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  email          String
+  passwordHash   String
+  role           String       @default("ATTENDANT")
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  auditEvents    AuditEvent[]
+  @@unique([organizationId, email])
+  @@index([organizationId, role])
+}
+
+model BrandingSettings {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  systemName     String       @default("ISP Manager")
+  logoUrl        String?
+  primaryColor   String       @default("#4863ed")
+  accentColor    String       @default("#22a77d")
+  welcomeTitle   String       @default("Gestão operacional")
+  welcomeMessage String       @default("Acompanhe a operação da sua equipa.")
+  supportEmail   String?
+  supportPhone   String?
+  updatedAt      DateTime     @updatedAt
+}
+
+model ServiceOrder {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  code           String
+  title          String
+  customerName   String
+  address        String?
+  description    String?
+  priority       String       @default("NORMAL")
+  status         String       @default("OPEN")
+  assignedTeam   String?
+  scheduledAt    DateTime?
+  completedAt    DateTime?
+  createdById    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@unique([organizationId, code])
+  @@index([organizationId, status, createdAt])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  actorUserId    String?
+  actor          User?        @relation(fields: [actorUserId], references: [id])
+  action         String
+  entityType     String
+  entityId       String?
+  details        Json?
+  createdAt      DateTime     @default(now())
+  @@index([organizationId, createdAt])
+}
