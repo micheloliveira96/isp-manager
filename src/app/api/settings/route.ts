@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, canManageBranding } from "@/lib/session";
+import { getSession, hasPermission } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -15,7 +15,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
-  if (!canManageBranding(session.role)) return NextResponse.json({ error: "Só o gestor pode alterar a identidade visual." }, { status: 403 });
+  if (!(await hasPermission(session, "branding.manage"))) return NextResponse.json({ error: "Não tens permissão para alterar a identidade visual." }, { status: 403 });
   try {
     const body = await request.json();
     const textFields = ["companyName", "productName", "logo", "primaryColor", "accentColor", "loginTitle", "loginMessage", "supportEmail", "supportPhone"];
