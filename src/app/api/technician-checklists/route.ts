@@ -21,7 +21,7 @@ export async function POST(request:NextRequest) {
   const notes=String(body.notes||"").slice(0,3000);
   const order=await prisma.serviceOrder.findFirst({where:{id:orderId,organizationId:session.organizationId},select:{id:true,assignedTeam:true}});
   if(!order) return NextResponse.json({error:"Ordem não encontrada."},{status:404});
-  if(session.role==="TECHNICIAN" && order.assignedTeam!==session.name) return NextResponse.json({error:"Só podes guardar a checklist de uma ordem atribuída a ti."},{status:403});
+  if(session.role==="TECHNICIAN") { const technician=await prisma.technician.findFirst({where:{organizationId:session.organizationId,active:true,email:{equals:session.email,mode:"insensitive"}},include:{team:{select:{name:true}}}}); const assignedNames=[session.name,technician?.team?.name].filter(Boolean); if(!assignedNames.includes(order.assignedTeam||"")) return NextResponse.json({error:"Só podes guardar checklists de ordens atribuídas a ti ou à tua equipa."},{status:403}); }
   const safeItems:Record<string,boolean>={}; for(let i=0;i<6;i++) safeItems[String(i)]=Boolean(items[String(i)]);
   const checklist={id:orderId,items:safeItems,notes,updatedAt:new Date().toISOString()};
   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"TECHNICIAN_CHECKLIST",entityType:"ServiceOrder",entityId:orderId,details:{items:safeItems,notes}}});
