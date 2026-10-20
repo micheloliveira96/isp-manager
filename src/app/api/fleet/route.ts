@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
@@ -39,13 +40,14 @@ export async function POST(request: NextRequest) {
     const lastOilChangeKm = body.lastOilChangeKm === "" || body.lastOilChangeKm == null ? null : Number(body.lastOilChangeKm);
     const odometerKm = body.odometerKm === "" || body.odometerKm == null ? null : Number(body.odometerKm);
     const tireStatus = tireStatuses.includes(body.tireStatus) ? body.tireStatus : "UNKNOWN";
+    const status = vehicleStatuses.includes(body.status) ? body.status : "ACTIVE";
     if (plate.length < 7 || plate.length > 8) return NextResponse.json({ error: "Informe uma placa válida, com 7 ou 8 caracteres." }, { status: 400 });
     if (model.length < 2) return NextResponse.json({ error: "Informe o modelo do veículo." }, { status: 400 });
     if (year !== null && (!Number.isInteger(year) || year < 1950 || year > new Date().getFullYear() + 1)) return NextResponse.json({ error: "Informe um ano de fabricação válido." }, { status: 400 });
     if (ipvaDueDate === undefined || lastOilChangeDate === undefined) return NextResponse.json({ error: "Uma das datas informadas é inválida." }, { status: 400 });
     if ((lastOilChangeKm !== null && (!Number.isInteger(lastOilChangeKm) || lastOilChangeKm < 0)) || (odometerKm !== null && (!Number.isInteger(odometerKm) || odometerKm < 0))) return NextResponse.json({ error: "A quilometragem deve ser um número inteiro maior ou igual a zero." }, { status: 400 });
     if (driverTechnicianId && !await prisma.technician.findFirst({ where: { id: driverTechnicianId, organizationId: session.organizationId, active: true } })) return NextResponse.json({ error: "O motorista selecionado não foi encontrado." }, { status: 400 });
-    const vehicle = await prisma.fleetVehicle.create({ data: { organizationId: session.organizationId, plate, model, brand, year, driverTechnicianId, ipvaDueDate, tireStatus, lastOilChangeDate, lastOilChangeKm, odometerKm, notes: String(body.notes || "").trim().slice(0, 2000) || null }, include: { driver: { select: { id: true, name: true, phone: true } } } });
+    const vehicle = await prisma.fleetVehicle.create({ data: { organizationId: session.organizationId, plate, model, brand, year, driverTechnicianId, ipvaDueDate, tireStatus, lastOilChangeDate, lastOilChangeKm, odometerKm, status, notes: String(body.notes || "").trim().slice(0, 2000) || null }, include: { driver: { select: { id: true, name: true, phone: true } } } });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "CREATE", entityType: "FleetVehicle", entityId: vehicle.id, details: { plate, model } } });
     return NextResponse.json({ vehicle }, { status: 201 });
   } catch (error) {
@@ -64,7 +66,7 @@ export async function PATCH(request: NextRequest) {
     const id = String(body.id || "");
     const existing = await prisma.fleetVehicle.findFirst({ where: { id, organizationId: session.organizationId } });
     if (!existing) return NextResponse.json({ error: "Veículo não encontrado." }, { status: 404 });
-    const data: Record<string, unknown> = {};
+    const data: Prisma.FleetVehicleUncheckedUpdateInput = {};
     if (body.plate !== undefined) {
       const plate = plateValue(body.plate);
       if (plate.length < 7 || plate.length > 8) return NextResponse.json({ error: "Informe uma placa válida, com 7 ou 8 caracteres." }, { status: 400 });
