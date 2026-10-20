@@ -17,6 +17,7 @@ model Organization {
   users       User[]
   orders      ServiceOrder[]
   teams       ServiceTeam[]
+  technicians Technician[]
   serviceTypes ServiceType[]
   branding    BrandingSettings?
   auditEvents AuditEvent[]
@@ -115,8 +116,27 @@ model ServiceTeam {
   active         Boolean      @default(true)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  technicians    Technician[]
   @@unique([organizationId, name])
   @@index([organizationId, active])
+}
+
+model Technician {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  teamId         String?
+  team           ServiceTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  name           String
+  address        String?
+  phone          String?
+  email          String?
+  notes          String?
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@index([organizationId, active])
+  @@index([teamId])
 }
 
 model ServiceType {
