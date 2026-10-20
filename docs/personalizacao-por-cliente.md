@@ -4,7 +4,7 @@ O ISP Manager será preparado como produto multiempresa (multi-tenant). Cada pro
 
 ## Opções de personalização previstas
 - Nome comercial apresentado na interface e página de login.
-- Logótipo principal e favicon.
+- logotipo principal e favicon.
 - Cor primária e cor de destaque.
 - Título e mensagem da página de login.
 - Email/telefone de suporte.
@@ -12,17 +12,17 @@ O ISP Manager será preparado como produto multiempresa (multi-tenant). Cada pro
 - Preferências de módulos disponíveis e dados de contacto.
 
 ## Área administrativa
-Gestor da empresa > Configurações > Identidade visual:
+Administrador da empresa > Configurações > Identidade visual:
 1. Editar nome da empresa/plataforma.
 2. Carregar/substituir logo e favicon.
 3. Escolher cores e pré-visualizar a interface.
 4. Configurar texto de login e contactos.
-5. Guardar, restaurar valores padrão e registar a alteração na auditoria.
+5. Salvar, restaurar valores padrão e registar a alteração na auditoria.
 
 ## Isolamento e segurança
 - As configurações têm uma chave organization_id.
 - O servidor identifica a organização pela sessão validada, nunca por um organization_id arbitrário enviado pelo browser.
-- Apenas utilizadores com settings:manage podem alterar a identidade visual.
+- Apenas usuários com settings:manage podem alterar a identidade visual.
 - Uploads precisam de validar formato, tamanho e conteúdo; nunca aceitar SVG arbitrário sem sanitização.
 - URLs de imagem devem ser servidas por armazenamento controlado; não confiar num URL fornecido sem validação.
 - As opções de personalização não podem permitir alterar permissões, contornar autorização ou executar código.

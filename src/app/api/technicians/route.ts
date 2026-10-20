@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
-  if (session.role !== "MANAGER") return NextResponse.json({ error: "Apenas o gestor pode gerir técnicos e equipas." }, { status: 403 });
+  if (session.role !== "MANAGER") return NextResponse.json({ error: "Apenas o administrador pode gerir técnicos e equipes." }, { status: 403 });
   try {
     const body = await request.json();
     const kind = body.kind === "team" ? "team" : "technician";
@@ -34,16 +34,16 @@ export async function POST(request: NextRequest) {
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "CREATE", entityType: "Technician", entityId: technician.id, details: { name, teamId } } });
     return NextResponse.json({ technician }, { status: 201 });
   } catch (error) {
-    if (typeof error === "object" && error && "code" in error && error.code === "P2002") return NextResponse.json({ error: "Já existe um registo com esse nome." }, { status: 409 });
+    if (typeof error === "object" && error && "code" in error && error.code === "P2002") return NextResponse.json({ error: "Já existe um registro com esse nome." }, { status: 409 });
     console.error("Create technician/team failed", error);
-    return NextResponse.json({ error: "Não foi possível guardar o registo." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível salvar o registro." }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
-  if (session.role !== "MANAGER") return NextResponse.json({ error: "Apenas o gestor pode gerir técnicos e equipas." }, { status: 403 });
+  if (session.role !== "MANAGER") return NextResponse.json({ error: "Apenas o administrador pode gerir técnicos e equipes." }, { status: 403 });
   try {
     const body = await request.json();
     const id = String(body.id || "");
@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
-  if (session.role !== "MANAGER") return NextResponse.json({ error: "Apenas o gestor pode gerir técnicos e equipas." }, { status: 403 });
+  if (session.role !== "MANAGER") return NextResponse.json({ error: "Apenas o administrador pode gerir técnicos e equipes." }, { status: 403 });
   try {
     const body = await request.json();
     const id = String(body.id || "");
