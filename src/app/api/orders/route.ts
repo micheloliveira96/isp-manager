@@ -6,7 +6,12 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
   if (!(await hasPermission(session, "orders.view"))) return NextResponse.json({ error: "Não tem permissão para consultar ordens." }, { status: 403 });
-  let where: any = { organizationId: session.organizationId };\n  if (session.role === "TECHNICIAN") {\n    const technician = await prisma.technician.findFirst({ where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } }, include: { team: { select: { name: true } } } });\n    const assignedNames = [session.name, technician?.team?.name].filter(Boolean);\n    where = { organizationId: session.organizationId, assignedTeam: { in: assignedNames } };\n  }
+  let where: any = { organizationId: session.organizationId };
+  if (session.role === "TECHNICIAN") {
+    const technician = await prisma.technician.findFirst({ where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } }, include: { team: { select: { name: true } } } });
+    const assignedNames = [session.name, technician?.team?.name].filter(Boolean);
+    where = { organizationId: session.organizationId, assignedTeam: { in: assignedNames } };
+  }
   const orders = await prisma.serviceOrder.findMany({ where, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, pppoePassword: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 200 });
   return NextResponse.json({ orders: orders.map((order) => ({ ...order, phone: null })) });
 }
