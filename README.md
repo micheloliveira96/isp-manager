@@ -1,11 +1,11 @@
 # ISP Manager
 
-Plataforma de gestão operacional para provedores de Internet, preparada para personalização por empresa e instaleção em servidor próprio.
+Plataforma de gestão operacional para provedores de Internet, preparada para personalização por empresa e instalação em servidor próprio.
 
-## Instaleção simplificada no mini-PC Windows
+## Instalação simplificada no mini-PC Windows
 
 1. Instale o Docker Desktop e abra-o.
-2. Baixe/clona este repositório para o computador.
+2. Baixe ou clone este repositório para o computador.
 3. Abra PowerShell na pasta do projeto e execute `Set-ExecutionPolicy -Scope Process Bypass` e depois `./scripts/setup-windows.ps1`.
 4. O script cria `.env` com segredos aleatórios, inicia a base de dados e a aplicação, e cria o administrador inicial. Salve a senha que aparece no terminal.
 5. Abra `http://localhost:3000`.
@@ -30,7 +30,7 @@ Requisitos: Node.js 22+ e Docker Desktop.
 - Ordens de serviço com persistência, validação e registro de auditoria.
 - Perfis Administrador, Atendente e Técnico; a autorização deve ser aplicada em cada API.
 - Docker Compose com volume persistente; a porta da base de dados não é publicada.
-- Scripts de instaleção inicial e backup PostgreSQL para Windows.
+- Scripts de instalação inicial e backup PostgreSQL para Windows.
 
 ## Segurança antes de produção
 
