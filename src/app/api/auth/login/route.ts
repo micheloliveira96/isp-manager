@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
     const organizationSlug = String(body.organizationSlug || process.env.DEFAULT_ORGANIZATION_SLUG || "empresa-principal").trim().toLowerCase();
-    if (!email || !password || email.length > 200 || password.length > 200) return NextResponse.json({ error: "Introduza email e palavra-passe." }, { status: 400 });
+    if (!email || !password || email.length > 200 || password.length > 200) return NextResponse.json({ error: "Digite seu e-mail e sua senha." }, { status: 400 });
     let user = await prisma.user.findFirst({ where: { email, active: true, organization: { slug: organizationSlug } }, include: { organization: true } });
     // First-run bootstrap: only the configured admin email + exact server-side initial password may create the first account.
     if (!user && email === (process.env.INITIAL_ADMIN_EMAIL || "").trim().toLowerCase() && password === process.env.INITIAL_ADMIN_PASSWORD) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         await prisma.brandingSettings.upsert({
           where: { organizationId: organization.id },
           update: {},
-          create: { organizationId: organization.id, systemName: "ISP Manager", welcomeTitle: "Gestão operacional", welcomeMessage: "Acompanhe a operação da sua equipa." }
+          create: { organizationId: organization.id, systemName: "ISP Manager", welcomeTitle: "Gestão operacional", welcomeMessage: "Acompanhe a operação da sua equipe." }
         });
       }
     }

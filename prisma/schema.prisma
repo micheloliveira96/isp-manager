@@ -21,6 +21,9 @@ model Organization {
   serviceTypes ServiceType[]
   branding    BrandingSettings?
   auditEvents AuditEvent[]
+  inventoryProducts InventoryProduct[]
+  inventoryAssignments InventoryAssignment[]
+  fleetVehicles FleetVehicle[]
 }
 
 model User {
@@ -119,6 +122,7 @@ model ServiceTeam {
   technicians    Technician[]
   @@unique([organizationId, name])
   @@index([organizationId, active])
+  inventoryAssignments InventoryAssignment[]
 }
 
 model Technician {
@@ -137,6 +141,8 @@ model Technician {
   updatedAt      DateTime     @updatedAt
   @@index([organizationId, active])
   @@index([teamId])
+  inventoryAssignments InventoryAssignment[]
+  drivenVehicles FleetVehicle[] @relation("FleetDriver")
 }
 
 model ServiceType {
@@ -149,4 +155,75 @@ model ServiceType {
   updatedAt      DateTime     @updatedAt
   @@unique([organizationId, name])
   @@index([organizationId, active])
+}
+
+
+model InventoryProduct {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  category       String   @default("OTHER")
+  sku            String?
+  unit           String   @default("UN")
+  quantityOnHand Int      @default(0)
+  minQuantity    Int      @default(0)
+  active         Boolean  @default(true)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  assignments    InventoryAssignment[]
+  @@unique([organizationId, sku])
+  @@index([organizationId, category, active])
+}
+
+model InventoryAssignment {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  productId      String
+  product        InventoryProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity       Int
+  technicianId   String?
+  technician     Technician? @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  teamId         String?
+  team           ServiceTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  vehicleId      String?
+  vehicle        FleetVehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  status         String   @default("ASSIGNED")
+  assignedAt     DateTime @default(now())
+  returnedAt     DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@index([organizationId, status])
+  @@index([productId, status])
+  @@index([technicianId, status])
+  @@index([teamId, status])
+  @@index([vehicleId, status])
+}
+
+model FleetVehicle {
+  id                String   @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plate             String
+  brand             String?
+  model             String
+  year              Int?
+  driverTechnicianId String?
+  driver             Technician? @relation("FleetDriver", fields: [driverTechnicianId], references: [id], onDelete: SetNull)
+  ipvaDueDate       DateTime?
+  tireStatus        String   @default("UNKNOWN")
+  lastOilChangeDate DateTime?
+  lastOilChangeKm   Int?
+  odometerKm        Int?
+  status            String   @default("ACTIVE")
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  inventoryAssignments InventoryAssignment[]
+  @@unique([organizationId, plate])
+  @@index([organizationId, status])
+  @@index([driverTechnicianId])
 }
