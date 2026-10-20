@@ -7,7 +7,7 @@ const defaults:Record<string,string[]>={MANAGER:permissionCatalog.map(p=>p.code)
 export async function GET() {
  const session=await getSession();
  if(!session)return NextResponse.json({error:"Sessão necessária."},{status:401});
- if(session.role!=="MANAGER")return NextResponse.json({error:"Apenas o administrador pode gerir usuários."},{status:403});
+ if(session.role!=="MANAGER")return NextResponse.json({error:"Apenas o administrador pode gerenciar usuários."},{status:403});
  const raw=await prisma.user.findMany({where:{organizationId:session.organizationId},include:{permissions:true},orderBy:{createdAt:"desc"}});
  const users=raw.map(u=>{const effective=new Map<string, boolean>((defaults[u.role]||[]).map(code=>[code,true] as [string, boolean]));for(const p of u.permissions)effective.set(p.permissionCode,p.allowed);return{id:u.id,name:u.name,email:u.email,role:u.role,active:u.active,createdAt:u.createdAt,permissions:Object.fromEntries(effective)}});
  return NextResponse.json({users,permissionCatalog});

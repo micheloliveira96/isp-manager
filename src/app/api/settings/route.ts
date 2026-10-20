@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
     for (const key of textFields) if (body[key] !== undefined && typeof body[key] !== "string") return NextResponse.json({ error: "Formato inválido." }, { status: 400 });
     if (String(body.productName || "").length > 50 || String(body.companyName || "").length > 70 || String(body.loginTitle || "").length > 90 || String(body.loginMessage || "").length > 220) return NextResponse.json({ error: "Um dos campos excede o limite permitido." }, { status: 400 });
     const logo = String(body.logo || "");
-    if (logo.length > 1_600_000) return NextResponse.json({ error: "O logotipo é demasiado grande." }, { status: 413 });
+    if (logo.length > 1_600_000) return NextResponse.json({ error: "O logotipo é muito grande." }, { status: 413 });
     const primaryColor = String(body.primaryColor || "#4863ed");
     const accentColor = String(body.accentColor || "#22a77d");
     if (!/^#[0-9a-fA-F]{6}$/.test(primaryColor) || !/^#[0-9a-fA-F]{6}$/.test(accentColor)) return NextResponse.json({ error: "Formato de cor inválido." }, { status: 400 });
