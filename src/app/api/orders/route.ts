@@ -6,8 +6,8 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
   if (!(await hasPermission(session, "orders.view"))) return NextResponse.json({ error: "Não tem permissão para consultar ordens." }, { status: 403 });
-  const where = session.role === "TECHNICIAN" ? { organizationId: session.organizationId, assignedTeam: session.name } : { organizationId: session.organizationId };
-  const orders = await prisma.serviceOrder.findMany({ where, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, pppoePassword: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 200 });
+  const where = session.role === "TECHNICIAN" ? { organizationId: session.organizationId, assignedTechnician: { userId: session.userId } } : { organizationId: session.organizationId };
+  const orders = await prisma.serviceOrder.findMany({ where, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, pppoePassword: true, address: true, description: true, priority: true, status: true, assignedTeam: true, assignedTechnicianId: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 200 });
   return NextResponse.json({ orders: orders.map((order) => ({ ...order, phone: null })) });
 }
 
@@ -45,12 +45,15 @@ export async function PATCH(request: NextRequest) {
     const id = String(body.id || "");
     const status = String(body.status || "");
     if (!id || !["OPEN", "SCHEDULED", "IN_PROGRESS", "REVIEW", "COMPLETED", "CANCELLED"].includes(status)) return NextResponse.json({ error: "Estado inválido." }, { status: 400 });
-    const existing = await prisma.serviceOrder.findFirst({ where: { id, organizationId: session.organizationId }, select: { id: true, status: true, assignedTeam: true } });
+    const existing = await prisma.serviceOrder.findFirst({ where: { id, organizationId: session.organizationId }, select: { id: true, status: true, assignedTeam: true, assignedTechnicianId: true } });
     if (!existing) return NextResponse.json({ error: "Ordem não encontrada." }, { status: 404 });
     if (!(await hasPermission(session, "orders.update"))) return NextResponse.json({ error: "Não tem permissão para atualizar ordens." }, { status: 403 });
+    if (body.assignedTechnicianId !== undefined && session.role !== "MANAGER") return NextResponse.json({ error: "Só o administrador pode atribuir ordens." }, { status: 403 });
     if (status === "COMPLETED" && !(await hasPermission(session, "orders.approve"))) return NextResponse.json({ error: "A aprovação final exige permissão específica." }, { status: 403 });
-    if (session.role === "TECHNICIAN" && (existing.assignedTeam !== session.name || !["IN_PROGRESS", "REVIEW"].includes(status))) return NextResponse.json({ error: "Só pode atualizar uma ordem atribuída a ti para execução ou análise." }, { status: 403 });
-    const order = await prisma.serviceOrder.update({ where: { id }, data: { status, completedAt: status === "COMPLETED" ? new Date() : null }, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true } });
+    if (session.role === "TECHNICIAN" && (existing.assignedTechnicianId !== (await prisma.technician.findFirst({where:{organizationId:session.organizationId,userId:session.userId},select:{id:true}}))?.id || !["IN_PROGRESS", "REVIEW"].includes(status))) return NextResponse.json({ error: "Só pode atualizar uma ordem atribuída a ti para execução ou análise." }, { status: 403 });
+    let assignedTechnicianId: string | null | undefined = undefined;
+    if (body.assignedTechnicianId !== undefined) { assignedTechnicianId = String(body.assignedTechnicianId || "") || null; if (assignedTechnicianId && !await prisma.technician.findFirst({where:{id:assignedTechnicianId,organizationId:session.organizationId,active:true}})) return NextResponse.json({error:"Técnico inválido."},{status:400}); }
+    const order = await prisma.serviceOrder.update({ where: { id }, data: { status, completedAt: status === "COMPLETED" ? new Date() : null, ...(assignedTechnicianId !== undefined ? { assignedTechnicianId } : {}) }, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, address: true, description: true, priority: true, status: true, assignedTeam: true, assignedTechnicianId: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true } });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "UPDATE_STATUS", entityType: "ServiceOrder", entityId: id, details: { from: existing.status, to: status } } });
     return NextResponse.json({ order: { ...order, phone: null } });
   } catch (error) {
