@@ -24,6 +24,10 @@ model Organization {
   inventoryProducts InventoryProduct[]
   inventoryAssignments InventoryAssignment[]
   fleetVehicles FleetVehicle[]
+  clients Client[]
+  internetPlans InternetPlan[]
+  invoices BillingInvoice[]
+  payments Payment[]
 }
 
 model User {
@@ -226,4 +230,90 @@ model FleetVehicle {
   @@unique([organizationId, plate])
   @@index([organizationId, status])
   @@index([driverTechnicianId])
+}
+
+
+model Client {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  number         String
+  name           String
+  taxNumber      String?
+  address        String?
+  postalCode     String?
+  locality       String?
+  phone          String
+  alternatePhone String?
+  email          String?
+  planId         String?
+  plan           InternetPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  monthlyPrice   Decimal  @db.Decimal(10, 2)
+  installDate    DateTime?
+  dueDay         Int      @default(10)
+  status         String   @default("ACTIVE")
+  notes          String?
+  invoices       BillingInvoice[]
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, number])
+  @@index([organizationId, name])
+  @@index([organizationId, phone])
+  @@index([organizationId, email])
+  @@index([organizationId, status])
+}
+
+model InternetPlan {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  downloadMbps   Int
+  uploadMbps     Int
+  monthlyPrice   Decimal  @db.Decimal(10, 2)
+  description    String?
+  active         Boolean  @default(true)
+  clients        Client[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, name])
+  @@index([organizationId, active])
+}
+
+model BillingInvoice {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  period         String
+  amount         Decimal  @db.Decimal(10, 2)
+  dueDate        DateTime
+  status         String   @default("PENDING")
+  paidAt         DateTime?
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([clientId, period])
+  @@index([organizationId, status, dueDate])
+  @@index([clientId, dueDate])
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoiceId      String?
+  invoice        BillingInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  amount         Decimal  @db.Decimal(10, 2)
+  method         String
+  reference      String?
+  paidAt         DateTime @default(now())
+  notes          String?
+  createdAt      DateTime @default(now())
+  @@index([organizationId, paidAt])
+  @@index([clientId, paidAt])
 }
