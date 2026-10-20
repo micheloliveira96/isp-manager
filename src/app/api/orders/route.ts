@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getSession, hasPermission } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
@@ -6,7 +7,7 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
   if (!(await hasPermission(session, "orders.view"))) return NextResponse.json({ error: "Não tem permissão para consultar ordens." }, { status: 403 });
-  let where: any = { organizationId: session.organizationId };
+  let where: Prisma.ServiceOrderWhereInput = { organizationId: session.organizationId };
   if (session.role === "TECHNICIAN") {
     const technician = await prisma.technician.findFirst({ where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } }, include: { team: { select: { name: true } } } });
     const assignedNames = [session.name, technician?.team?.name].filter(Boolean);
