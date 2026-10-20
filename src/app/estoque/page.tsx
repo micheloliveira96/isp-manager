@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Package, Plus, RotateCcw, Search, Truck, UserRound, Users, LoaderCircle, Boxes, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Package, Plus, RotateCcw, Search, UserRound, LoaderCircle, Boxes, AlertTriangle } from "lucide-react";
 import LogoutButton from "../components/LogoutButton";
 import "./inventory.css";
 
@@ -79,7 +79,7 @@ export default function InventoryPage() {
     finally{setSaving(false);}
   }
   const products=data.products.filter(p=>(p.name+" "+(p.sku||"")+" "+(categoryLabels[p.category]||p.category)).toLowerCase().includes(query.toLowerCase()));
-  const totalUnits=data.products.reduce((sum,p)=>sum+p.quantityOnHand,0);
+  const productsWithStock=data.products.filter(p=>p.quantityOnHand>0).length;
   const lowStock=data.products.filter(p=>p.quantityOnHand<=p.minQuantity).length;
 
   return <main className="inventory-page">
@@ -87,7 +87,7 @@ export default function InventoryPage() {
     <div className="inventory-content">
       <div className="inventory-heading"><div><small>OPERAÇÃO / MATERIAIS</small><h1>Estoque e equipamentos</h1><p>Controle produtos, quantidades e materiais entregues aos técnicos, equipes e veículos.</p></div><button onClick={()=>setShowProduct(v=>!v)}><Plus size={16}/> Adicionar produto</button></div>
       {error&&<div className="inventory-alert error">{error}</div>}{notice&&<div className="inventory-alert success">{notice}</div>}
-      <div className="inventory-stats"><article><span>Produtos cadastrados</span><b>{data.products.length}</b><small>Tipos de materiais</small></article><article><span>Unidades disponíveis</span><b>{totalUnits}</b><small>Saldo total no estoque</small></article><article className={lowStock?"inventory-stat-warning":""}><span>Estoque baixo</span><b>{lowStock}</b><small>Produtos no mínimo ou abaixo dele</small></article><article><span>Materiais em uso</span><b>{data.assignments.length}</b><small>Associações ativas</small></article></div>
+      <div className="inventory-stats"><article><span>Produtos cadastrados</span><b>{data.products.length}</b><small>Tipos de materiais</small></article><article><span>Produtos com saldo</span><b>{productsWithStock}</b><small>Produtos com quantidade disponível</small></article><article className={lowStock?"inventory-stat-warning":""}><span>Estoque baixo</span><b>{lowStock}</b><small>Produtos no mínimo ou abaixo dele</small></article><article><span>Materiais em uso</span><b>{data.assignments.length}</b><small>Associações ativas</small></article></div>
       {showProduct&&<form className="inventory-card" onSubmit={submitProduct}><header><Package size={20}/><div><h2>Novo produto</h2><p>Cadastre o material e o saldo inicial disponível.</p></div></header><div className="inventory-fields">
         <label>Nome do produto *<input required maxLength={120} value={productForm.name} onChange={e=>setProductForm({...productForm,name:e.target.value})} placeholder="Ex.: ONU GPON, roteador Wi-Fi"/></label>
         <label>Categoria<select value={productForm.category} onChange={e=>setProductForm({...productForm,category:e.target.value})}>{Object.entries(categoryLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
