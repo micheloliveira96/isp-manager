@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const dueDay=Number(b.dueDay||10); if(!Number.isInteger(dueDay)||dueDay<1||dueDay>28) return NextResponse.json({error:"O vencimento deve ser entre os dias 1 e 28."},{status:400});
   const planId=String(b.planId||"")||null;
   let price=Number(b.monthlyPrice);
-  if(planId){const plan=await prisma.internetPlan.findFirst({where:{id:planId,organizationId:session.organizationId,active:true}});if(!plan)return NextResponse.json({error:"Plano inválido ou inativo."},{status:400});if(!Number.isFinite(price)||price<0)price=Number(plan.monthlyPrice);}
+  if(planId){const plan=await prisma.internetPlan.findFirst({where:{id:planId,organizationId:session.organizationId,active:true}});if(!plan)return NextResponse.json({error:"Plano inválido ou inativo."},{status:400});if(!Number.isFinite(price)||price<=0)price=Number(plan.monthlyPrice);}
   if(!Number.isFinite(price)||price<0) return NextResponse.json({error:"Indique um valor mensal válido."},{status:400});
   const number=String(b.number||"").trim()||"CL-"+Date.now().toString().slice(-9);
   const client=await prisma.client.create({data:{organizationId:session.organizationId,number,name,taxNumber:String(b.taxNumber||"").trim()||null,address:String(b.address||"").trim()||null,postalCode:String(b.postalCode||"").trim()||null,locality:String(b.locality||"").trim()||null,phone,alternatePhone:String(b.alternatePhone||"").trim()||null,email:String(b.email||"").trim()||null,planId,monthlyPrice:price,dueDay,installDate:b.installDate?new Date(b.installDate):null,status:["ACTIVE","SUSPENDED","CANCELLED"].includes(b.status)?b.status:"ACTIVE",notes:String(b.notes||"").trim()||null}});
