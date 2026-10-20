@@ -47,6 +47,15 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const id = String(body.id || "");
+    if (body.kind === "team") {
+      const name = String(body.name || "").trim().replace(/\\s+/g, " ");
+      if (name.length < 2 || name.length > 100) return NextResponse.json({error:"O nome da equipa deve ter entre 2 e 100 caracteres."},{status:400});
+      const existingTeam = await prisma.serviceTeam.findFirst({where:{id,organizationId:session.organizationId,active:true}});
+      if (!existingTeam) return NextResponse.json({error:"Equipa não encontrada."},{status:404});
+      const team = await prisma.serviceTeam.update({where:{id},data:{name}});
+      await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE",entityType:"ServiceTeam",entityId:id,details:{name}}});
+      return NextResponse.json({team});
+    }
     const teamId = String(body.teamId || "").trim() || null;
     const technician = await prisma.technician.findFirst({ where: { id, organizationId: session.organizationId, active: true } });
     if (!technician) return NextResponse.json({ error: "Técnico não encontrado." }, { status: 404 });
@@ -67,6 +76,15 @@ export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
     const id = String(body.id || "");
+    if (body.kind === "team") {
+      const team = await prisma.serviceTeam.findFirst({where:{id,organizationId:session.organizationId,active:true}});
+      if (!team) return NextResponse.json({error:"Equipa não encontrada."},{status:404});
+      const linked = await prisma.technician.count({where:{organizationId:session.organizationId,teamId:id,active:true}});
+      if (linked) return NextResponse.json({error:"Esta equipa tem técnicos associados. Transfere-os para outra equipa antes de eliminar."},{status:409});
+      await prisma.serviceTeam.update({where:{id},data:{active:false}});
+      await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"DEACTIVATE",entityType:"ServiceTeam",entityId:id,details:{name:team.name}}});
+      return NextResponse.json({success:true});
+    }
     const updated = await prisma.technician.updateMany({ where: { id, organizationId: session.organizationId, active: true }, data: { active: false, teamId: null } });
     if (!updated.count) return NextResponse.json({ error: "Técnico não encontrado." }, { status: 404 });
     await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "DEACTIVATE", entityType: "Technician", entityId: id, details: {} } });
