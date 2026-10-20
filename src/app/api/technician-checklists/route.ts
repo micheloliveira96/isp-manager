@@ -7,7 +7,8 @@ export async function GET() {
  if (!session) return NextResponse.json({error:"Sessão necessária."},{status:401});
  if (!(await hasPermission(session,"orders.view"))) return NextResponse.json({error:"Sem permissão."},{status:403});
  const rows = await prisma.auditEvent.findMany({where:{organizationId:session.organizationId,entityType:"ServiceOrder",action:"TECHNICIAN_CHECKLIST"},orderBy:{createdAt:"desc"},take:500,select:{entityId:true,details:true,createdAt:true}});
- type ChecklistRecord = { items?: Record<string, boolean>; notes?: string };\n const checklists:Record<string,{id:string;items:Record<string,boolean>;notes:string;updatedAt:Date}>={};
+ type ChecklistRecord = { items?: Record<string, boolean>; notes?: string };
+ const checklists:Record<string,{id:string;items:Record<string,boolean>;notes:string;updatedAt:Date}>={};
  for (const row of rows) if(row.entityId && !checklists[row.entityId]) { const d=row.details as ChecklistRecord | null; checklists[row.entityId]={id:row.entityId,items:d?.items||{},notes:d?.notes||"",updatedAt:row.createdAt}; }
  return NextResponse.json({checklists});
 }
