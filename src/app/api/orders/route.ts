@@ -7,7 +7,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
   if (!(await hasPermission(session, "orders.view"))) return NextResponse.json({ error: "Não tens permissão para consultar ordens." }, { status: 403 });
   const where = session.role === "TECHNICIAN" ? { organizationId: session.organizationId, assignedTeam: session.name } : { organizationId: session.organizationId };
-  const orders = await prisma.serviceOrder.findMany({ where, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 200 });
+  const orders = await prisma.serviceOrder.findMany({ where, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, pppoePassword: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 200 });
   return NextResponse.json({ orders: orders.map((order) => ({ ...order, phone: null })) });
 }
 
