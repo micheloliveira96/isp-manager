@@ -9,7 +9,8 @@ type Technician={id:string;name:string;address:string|null;phone:string|null;ema
 export default function TeamsPage(){
  const [teams,setTeams]=useState<Team[]>([]),[technicians,setTechnicians]=useState<Technician[]>([]);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[showForm,setShowForm]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
- const [teamName,setTeamName]=useState("");\n const [editingTeamId,setEditingTeamId]=useState<string|null>(null);
+ const [teamName,setTeamName]=useState("");
+ const [editingTeamId,setEditingTeamId]=useState<string|null>(null);
  const [form,setForm]=useState({name:"",address:"",phone:"",email:"",notes:"",teamId:""});
  async function load(){try{const r=await fetch("/api/technicians",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível carregar técnicos e equipes.");setTeams(d.teams);setTechnicians(d.technicians)}catch(e){setError(e instanceof Error?e.message:"Erro ao carregar")}finally{setLoading(false)}}
  useEffect(()=>{load()},[]);
