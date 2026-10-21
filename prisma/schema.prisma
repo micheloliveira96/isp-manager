@@ -29,6 +29,7 @@ model Organization {
   internetPlans InternetPlan[]
   invoices BillingInvoice[]
   payments Payment[]
+  expenses AccountPayable[]
   attendanceRecords AttendanceRecord[]
 }
 
@@ -361,4 +362,21 @@ model FuelRefill {
   createdAt      DateTime @default(now())
   @@index([organizationId, refilledAt])
   @@index([vehicleId, refilledAt])
+}
+
+model AccountPayable {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
+  description String
+  category String @default("OUTROS")
+  supplier String?
+  amount Decimal @db.Decimal(10,2)
+  dueDate DateTime
+  status String @default("PENDING")
+  paidAt DateTime?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId,status,dueDate])
 }
