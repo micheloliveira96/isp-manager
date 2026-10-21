@@ -58,7 +58,9 @@ export async function PATCH(request: NextRequest) {
     });
     if (!existing) return NextResponse.json({ error: "Ordem não encontrada." }, { status: 404 });
 
-    if (!(await hasPermission(session, "orders.update"))) {
+    // Técnicos só podem iniciar, finalizar ou devolver para reagendamento as ordens atribuídas.
+    // A autorização é validada abaixo pela atribuição; não bloquear ações operacionais por overrides genéricos.
+    if (session.role !== "TECHNICIAN" && !(await hasPermission(session, "orders.update"))) {
       return NextResponse.json({ error: "Não tem permissão para atualizar ordens." }, { status: 403 });
     }
 
@@ -77,7 +79,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       if (action === "reschedule") {
-        // Devolve a ordem à central/atendente para reagendamento e remove-a da lista do técnico.
+        // Devolve à central para que o atendente possa atribuir novamente e marcar data/hora.
         data = { status: "OPEN", assignedTeam: null, scheduledAt: null, completedAt: null };
         auditAction = "RESCHEDULE_REQUESTED";
         details = { from: existing.status, to: "OPEN", assignedTeamCleared: true, scheduledAtCleared: true };
@@ -85,8 +87,12 @@ export async function PATCH(request: NextRequest) {
         data = { status: "COMPLETED", completedAt: new Date() };
         auditAction = "TECHNICIAN_COMPLETED";
         details = { from: existing.status, to: "COMPLETED" };
+      } else if (!action && status === "IN_PROGRESS") {
+        data = { status: "IN_PROGRESS" };
+        auditAction = "TECHNICIAN_STARTED";
+        details = { from: existing.status, to: "IN_PROGRESS" };
       } else {
-        return NextResponse.json({ error: "Ação inválida para técnico." }, { status: 400 });
+        return NextResponse.json({ error: "Ação inválida para técnico. Usa iniciar, finalizar ou reagendar." }, { status: 400 });
       }
     } else {
       if (!["OPEN", "SCHEDULED", "IN_PROGRESS", "REVIEW", "COMPLETED", "CANCELLED"].includes(status)) {
