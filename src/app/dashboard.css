@@ -23,3 +23,79 @@ html.dark-mode .dash-theme-toggle{background:#202b3d;border-color:#3a4960;color:
 html.dark-mode .dash-theme-toggle:hover{background:#2b3850}
 html.dark-mode .dash-order-info span,html.dark-mode .dash-order-info small,html.dark-mode .dash-panel header p,html.dark-mode .dash-quick-links small{color:#aab6c9}
 @media(max-width:650px){.dash-top-actions{gap:8px}.dash-theme-toggle{padding:8px}.dash-theme-toggle span{display:none}}
+
+
+/* Responsive and contrast hardening — mobile, tablet and dark theme */
+html { -webkit-text-size-adjust: 100%; }
+body { overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+input, select, textarea, button { max-width: 100%; }
+.dash-shell, .dash-main, .dash-content, .dash-panel, .dash-order-info { min-width: 0; }
+.dash-content { width: 100%; }
+.dash-panel, .dash-stats article, .dash-quick-links > a { min-width: 0; }
+.dash-panel > header { gap: 12px; }
+.dash-panel > header > div { min-width: 0; }
+.dash-panel header a { flex-shrink: 0; }
+.dash-order-info { overflow: hidden; }
+.dash-order-info span, .dash-order-info small { overflow-wrap: anywhere; }
+.dash-status { flex-shrink: 0; }
+@media (max-width: 1050px) {
+  .dash-sidebar { width: 215px; }
+  .dash-main { min-width: 0; }
+  .dash-columns { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 650px) {
+  .dash-shell { display: block; width: 100%; min-height: 100dvh; }
+  .dash-sidebar { display: none; }
+  .dash-main { width: 100%; min-width: 0; }
+  .dash-top { width: 100%; min-width: 0; gap: 8px; }
+  .dash-top > div:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-content { width: 100%; padding: 18px 12px calc(84px + env(safe-area-inset-bottom)); }
+  .dash-welcome h1 { font-size: clamp(22px, 6vw, 27px); overflow-wrap: anywhere; }
+  .dash-welcome p { line-height: 1.55; }
+  .dash-primary { display: flex; justify-content: center; align-items: center; min-height: 44px; }
+  .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .dash-stats article { padding: 12px 10px; overflow-wrap: anywhere; }
+  .dash-stats article span { line-height: 1.45; min-height: 2.7em; }
+  .dash-stats article b { margin: 7px 0; }
+  .dash-stats article small { line-height: 1.45; }
+  .dash-columns, .dash-quick-links { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .dash-panel > header { padding: 14px 12px; align-items: flex-start; }
+  .dash-panel > header h2 { line-height: 1.4; }
+  .dash-panel > header p { line-height: 1.5; }
+  .dash-order-list { padding: 0 12px; }
+  .dash-order { gap: 8px; }
+  .dash-order-info b, .dash-order-info span, .dash-order-info small { white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
+  .dash-status { font-size: 7px; }
+  .dash-quick-links > a { padding: 13px 12px; }
+  .dash-footer { padding-bottom: 8px; }
+  .global-theme-toggle { bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 360px) {
+  .dash-content { padding-left: 9px; padding-right: 9px; }
+  .dash-stats { grid-template-columns: minmax(0, 1fr); }
+  .dash-stats article span { min-height: 0; }
+  .dash-panel > header { flex-wrap: wrap; }
+}
+html.dark-mode .dash-shell,
+html.dark-mode .dash-main,
+html.dark-mode .dash-content { background: var(--background, #111827); color: var(--foreground, #e5e7eb); }
+html.dark-mode .dash-panel,
+html.dark-mode .dash-stats article,
+html.dark-mode .dash-quick-links > a { background: var(--card, #182234); border-color: var(--border, #344155); color: var(--foreground, #e5e7eb); }
+html.dark-mode .dash-panel > header,
+html.dark-mode .dash-order,
+html.dark-mode .dash-activity > div { border-color: var(--border, #344155); }
+html.dark-mode .dash-quick-links b,
+html.dark-mode .dash-order-info b,
+html.dark-mode .dash-empty b,
+html.dark-mode .dash-activity p b { color: var(--foreground, #e5e7eb); }
+html.dark-mode .dash-stats article span,
+html.dark-mode .dash-stats article small,
+html.dark-mode .dash-order-info span,
+html.dark-mode .dash-order-info small,
+html.dark-mode .dash-panel header p,
+html.dark-mode .dash-quick-links small,
+html.dark-mode .dash-activity p,
+html.dark-mode .dash-activity small { color: var(--muted-foreground, #aab6c9); }
+html.dark-mode .dash-audit-note { background: #202b3d; color: #cbd5e1; }
