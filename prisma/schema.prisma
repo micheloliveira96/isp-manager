@@ -150,6 +150,7 @@ model Technician {
   @@index([teamId])
   inventoryAssignments InventoryAssignment[]
   drivenVehicles FleetVehicle[] @relation("FleetDriver")
+  fuelRefills FuelRefill[]
 }
 
 model ServiceType {
