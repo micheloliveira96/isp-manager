@@ -28,6 +28,7 @@ model Organization {
   internetPlans InternetPlan[]
   invoices BillingInvoice[]
   payments Payment[]
+  attendanceRecords AttendanceRecord[]
 }
 
 model User {
@@ -43,6 +44,7 @@ model User {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   auditEvents    AuditEvent[]
+  attendanceRecords AttendanceRecord[]
   permissions    UserPermission[]
   @@unique([organizationId, email])
   @@index([organizationId, role])
@@ -316,4 +318,22 @@ model Payment {
   createdAt      DateTime @default(now())
   @@index([organizationId, paidAt])
   @@index([clientId, paidAt])
+}
+
+
+model AttendanceRecord {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType      String
+  occurredAt     DateTime     @default(now())
+  photoData      String?      @db.Text
+  latitude       Float?
+  longitude      Float?
+  notes          String?      @db.VarChar(1000)
+  createdAt      DateTime     @default(now())
+  @@index([organizationId, userId, occurredAt])
+  @@index([organizationId, eventType, occurredAt])
 }
