@@ -43,6 +43,17 @@ export async function PATCH(request:NextRequest) {
    await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_PERMISSIONS",entityType:"User",entityId:id,details:{permissions:body.permissions}}});
    return NextResponse.json({ok:true});
   }
+  const hasProfileFields=["name","email","role"].some(k=>Object.prototype.hasOwnProperty.call(body,k));
+  if(hasProfileFields){
+   const name=String(body.name??user.name).trim();const email=String(body.email??user.email).trim().toLowerCase();const role=String(body.role??user.role);
+   if(name.length<2||name.length>100||!/^\S+@\S+\.\S+$/.test(email)||email.length>200||!ROLES.includes(role))return NextResponse.json({error:"Confirma o nome, email e perfil."},{status:400});
+   if(id===session.userId&&role!=="MANAGER")return NextResponse.json({error:"Não pode retirar o perfil de administrador da sua própria conta."},{status:400});
+   const duplicate=await prisma.user.findFirst({where:{organizationId:session.organizationId,email,NOT:{id}}});
+   if(duplicate)return NextResponse.json({error:"Já existe um usuário com este email nesta empresa."},{status:409});
+   const updated=await prisma.user.update({where:{id},data:{name,email,role},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true}});
+   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_USER",entityType:"User",entityId:id,details:{before:{name:user.name,email:user.email,role:user.role},after:{name:updated.name,email:updated.email,role:updated.role}}}});
+   return NextResponse.json({user:updated});
+  }
   const active=body.active;
   if(typeof active!=="boolean")return NextResponse.json({error:"Dados inválidos."},{status:400});
   if(id===session.userId&&!active)return NextResponse.json({error:"Não pode desativar a sua própria conta."},{status:400});
@@ -50,4 +61,25 @@ export async function PATCH(request:NextRequest) {
   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:active?"ENABLE_USER":"DISABLE_USER",entityType:"User",entityId:id,details:{email:user.email,active}}});
   return NextResponse.json({user:updated});
  }catch(error){console.error("Update user failed",error);return NextResponse.json({error:"Não foi possível alterar o usuário."},{status:500})}
+}
+export async function DELETE(request:NextRequest) {
+ const session=await getSession();
+ if(!session)return NextResponse.json({error:"Sessão necessária."},{status:401});
+ if(session.role!=="MANAGER")return NextResponse.json({error:"Apenas o administrador pode eliminar usuários."},{status:403});
+ try{
+  const id=request.nextUrl.searchParams.get("id")||String((await request.json().catch(()=>({}))).id||"");
+  if(!id)return NextResponse.json({error:"Usuário inválido."},{status:400});
+  if(id===session.userId)return NextResponse.json({error:"Não pode eliminar a sua própria conta."},{status:400});
+  const user=await prisma.user.findFirst({where:{id,organizationId:session.organizationId}});
+  if(!user)return NextResponse.json({error:"Usuário não encontrado."},{status:404});
+  if(user.role==="MANAGER"){
+   const managers=await prisma.user.count({where:{organizationId:session.organizationId,role:"MANAGER",active:true}});
+   if(user.active&&managers<=1)return NextResponse.json({error:"Não é possível eliminar o único administrador ativo da empresa."},{status:400});
+  }
+  await prisma.$transaction(async tx=>{
+   await tx.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"DELETE_USER",entityType:"User",entityId:id,details:{name:user.name,email:user.email,role:user.role}}});
+   await tx.user.delete({where:{id}});
+  });
+  return NextResponse.json({ok:true,id});
+ }catch(error){console.error("Delete user failed",error);return NextResponse.json({error:"Não foi possível eliminar o usuário."},{status:500})}
 }
