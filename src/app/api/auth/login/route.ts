@@ -34,10 +34,15 @@ export async function POST(request: NextRequest) {
         });
       }
     }
-    if (audience === "technician" && user && user.role !== "TECHNICIAN") return NextResponse.json({ error: "Esta página é exclusiva para contas de técnico." }, { status: 403 });
-    if (audience === "main" && user && user.role === "TECHNICIAN") return NextResponse.json({ error: "Utiliza o acesso exclusivo dos técnicos." }, { status: 403 });
     if (!user || user.organization.status !== "active" || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
+    }
+    // Validate the requested portal only after credentials are verified.
+    if (audience === "technician" && user.role !== "TECHNICIAN") {
+      return NextResponse.json({ error: "Esta área é exclusiva para contas com perfil Técnico. Solicita ao administrador que confirme o perfil do teu acesso." }, { status: 403 });
+    }
+    if (audience === "main" && user.role === "TECHNICIAN") {
+      return NextResponse.json({ error: "Esta conta só pode entrar pela área dos técnicos." }, { status: 403 });
     }
     const token = await createSession({ userId: user.id, organizationId: user.organizationId, role: user.role, name: user.name, email: user.email, mustChangePassword: user.mustChangePassword });
     const response = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, mustChangePassword: user.mustChangePassword }, organization: { name: user.organization.name }, mustChangePassword: user.mustChangePassword });
