@@ -10,7 +10,7 @@ export async function GET() {
   let where: Prisma.ServiceOrderWhereInput = { organizationId: session.organizationId };
   if (session.role === "TECHNICIAN") {
     const technician = await prisma.technician.findFirst({ where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } }, include: { team: { select: { name: true } } } });
-    const assignedNames = [session.name, technician?.team?.name].filter(Boolean);
+    const assignedNames = [session.name, technician?.team?.name].filter((name): name is string => Boolean(name));
     where = { organizationId: session.organizationId, assignedTeam: { in: assignedNames } };
   }
   const orders = await prisma.serviceOrder.findMany({ where, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, pppoePassword: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 200 });
@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest) {
     if (status === "COMPLETED" && !(await hasPermission(session, "orders.approve"))) return NextResponse.json({ error: "A aprovação final exige permissão específica." }, { status: 403 });
     if (session.role === "TECHNICIAN") {
       const technician = await prisma.technician.findFirst({ where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } }, include: { team: { select: { name: true } } } });
-      const assignedNames = [session.name, technician?.team?.name].filter(Boolean);
+      const assignedNames = [session.name, technician?.team?.name].filter((name): name is string => Boolean(name));
       if (!assignedNames.includes(existing.assignedTeam || "") || !["IN_PROGRESS", "REVIEW"].includes(status)) return NextResponse.json({ error: "Só podes atualizar ordens atribuídas a ti ou à tua equipa para execução ou análise." }, { status: 403 });
     }
     const order = await prisma.serviceOrder.update({ where: { id }, data: { status, completedAt: status === "COMPLETED" ? new Date() : null }, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true } });
