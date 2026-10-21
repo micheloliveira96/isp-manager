@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Camera, Clock3, MapPin, RefreshCw, ShieldCheck } from "lucide-react";
+import AbsencePanel from "./AbsencePanel";
 
 type EventType = "CLOCK_IN" | "BREAK_START" | "BREAK_END" | "CLOCK_OUT";
 type RecordItem = { id: string; eventType: EventType; occurredAt: string; photoData: string | null; latitude: number | null; longitude: number | null; notes: string | null };
@@ -18,6 +19,7 @@ export default function AttendancePanel() {
   const [notice, setNotice] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [photo, setPhoto] = useState("");
+  const [manager, setManager] = useState(false);
   const [location, setLocation] = useState<{latitude:number;longitude:number} | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -32,7 +34,7 @@ export default function AttendancePanel() {
     } catch (e) { setError(e instanceof Error ? e.message : "Erro ao carregar ponto."); }
     finally { setLoading(false); }
   }
-  useEffect(() => { void load(); return () => { streamRef.current?.getTracks().forEach(t => t.stop()); }; }, []);
+  useEffect(() => { void load(); void fetch("/api/auth/me",{cache:"no-store"}).then(r=>r.json()).then(d=>setManager(d.user?.role==="MANAGER")).catch(()=>{}); return () => { streamRef.current?.getTracks().forEach(t => t.stop()); }; }, []);
 
   async function openCamera() {
     setError(""); setNotice("");
