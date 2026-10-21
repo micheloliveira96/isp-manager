@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppearanceToggle from "./components/AppearanceToggle";
+import GlobalBack from "./components/GlobalBack";
 
 export const metadata: Metadata = {
   title: "ISP Manager | Gestão operacional",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         {children}
         <AppearanceToggle />
+        <GlobalBack />
       </body>
     </html>
   );
