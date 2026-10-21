@@ -99,3 +99,27 @@ html.dark-mode .dash-quick-links small,
 html.dark-mode .dash-activity p,
 html.dark-mode .dash-activity small { color: var(--muted-foreground, #aab6c9); }
 html.dark-mode .dash-audit-note { background: #202b3d; color: #cbd5e1; }
+
+
+/* Mobile navigation drawer */
+.mobile-nav-trigger{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;border:1px solid #e5e9f0;border-radius:9px;background:#fff;color:#334155;cursor:pointer}
+.mobile-nav-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(8,15,30,.58);display:flex;align-items:stretch;justify-content:flex-start}
+.mobile-nav-drawer{width:min(310px,86vw);height:100%;overflow-y:auto;overscroll-behavior:contain;background:#fff;color:#1b2540;padding:18px 14px calc(22px + env(safe-area-inset-bottom));box-shadow:12px 0 36px rgba(0,0,0,.18);animation:mobile-nav-in .18s ease-out}
+.mobile-nav-heading{display:flex;align-items:center;justify-content:space-between;padding:3px 4px 20px;border-bottom:1px solid #e9edf3}
+.mobile-nav-heading span{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800}
+.mobile-nav-heading span svg{color:#4863ed}
+.mobile-nav-heading button{display:grid;place-items:center;width:38px;height:38px;border:0;border-radius:8px;background:transparent;color:inherit}
+.mobile-nav-drawer nav{display:grid;gap:4px;padding-top:12px}
+.mobile-nav-drawer nav p{font-size:10px;letter-spacing:1px;color:#929bad;font-weight:800;margin:14px 9px 5px}
+.mobile-nav-drawer nav a{display:flex;align-items:center;gap:11px;padding:12px 10px;border-radius:8px;color:#536078;text-decoration:none;font-size:13px;font-weight:600}
+.mobile-nav-drawer nav a:active,.mobile-nav-drawer nav a:hover{background:#edf0ff;color:#4863ed}
+@keyframes mobile-nav-in{from{transform:translateX(-18px);opacity:.7}to{transform:translateX(0);opacity:1}}
+html.dark-mode .mobile-nav-trigger{background:#202b3d;border-color:#3a4960;color:#e5e7eb}
+html.dark-mode .mobile-nav-drawer{background:#151e2e;color:#e5e7eb}
+html.dark-mode .mobile-nav-heading{border-color:#2b374b}
+html.dark-mode .mobile-nav-drawer nav a{color:#cbd5e1}
+html.dark-mode .mobile-nav-drawer nav a:active,html.dark-mode .mobile-nav-drawer nav a:hover{background:#26345b;color:#aebcff}
+html.dark-mode .mobile-nav-drawer nav p{color:#9aa8bd}
+@media(max-width:650px){.mobile-nav-trigger{display:inline-flex}.dash-top-actions{gap:8px}.dash-secure{font-size:0!important;gap:0}.dash-secure i{width:7px;height:7px}.dash-top{padding-left:10px;padding-right:10px}}
+@media(min-width:651px){.mobile-nav-backdrop{display:none}}
+@media(prefers-reduced-motion:reduce){.mobile-nav-drawer{animation:none}}
