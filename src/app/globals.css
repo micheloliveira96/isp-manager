@@ -92,3 +92,139 @@ html.dark-mode .orders-notice { background:#173c32; color:#a7f3d0; }
 html.dark-mode .orders-error { background:#48272d; color:#fecaca; }
 html.dark-mode input::placeholder,
 html.dark-mode textarea::placeholder { color:#8290a7; }
+
+
+/* Dark mode consistency pass: shared tokens used by dashboard, forms and technician workspace */
+:root {
+  --background: #f5f7fb;
+  --foreground: #172033;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --field-bg: #ffffff;
+  --muted: #eef2ff;
+  --muted-foreground: #64748b;
+}
+html.dark-mode {
+  --background: #111827;
+  --foreground: #e5e7eb;
+  --card: #182234;
+  --border: #344155;
+  --field-bg: #111b2b;
+  --muted: #26334b;
+  --muted-foreground: #aab6c9;
+  color-scheme: dark;
+}
+html.dark-mode body,
+html.dark-mode main,
+html.dark-mode .app-shell,
+html.dark-mode .main-area,
+html.dark-mode .content,
+html.dark-mode .orders-page {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+html.dark-mode section,
+html.dark-mode article,
+html.dark-mode .panel,
+html.dark-mode .stat-card,
+html.dark-mode .orders-form,
+html.dark-mode .orders-list-panel,
+html.dark-mode .company-switch {
+  background-color: var(--card);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea {
+  color: var(--foreground) !important;
+  background-color: var(--field-bg) !important;
+  border-color: var(--border) !important;
+  color-scheme: dark;
+}
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder {
+  color: #8794aa;
+}
+html.dark-mode table,
+html.dark-mode tbody,
+html.dark-mode tr,
+html.dark-mode td,
+html.dark-mode th {
+  border-color: var(--border);
+}
+html.dark-mode thead,
+html.dark-mode th {
+  background-color: #202b3d;
+  color: #b6c2d4;
+}
+html.dark-mode td {
+  border-top-color: var(--border);
+  color: var(--foreground);
+}
+html.dark-mode hr {
+  border-color: var(--border) !important;
+}
+html.dark-mode .global-theme-toggle {
+  background: #202b3d;
+  color: #f8fafc;
+  border-color: #43516a;
+  box-shadow: 0 8px 28px #00000055;
+}
+html.dark-mode .job-meta,
+html.dark-mode .job-place,
+html.dark-mode .team-cell,
+html.dark-mode .time-cell,
+html.dark-mode .profile-copy span,
+html.dark-mode .company-copy span,
+html.dark-mode .section-title-row p,
+html.dark-mode .panel-header p,
+html.dark-mode .stat-foot,
+html.dark-mode .footer,
+html.dark-mode .activity-copy p,
+html.dark-mode .activity-copy span,
+html.dark-mode .schedule-description span,
+html.dark-mode .resource-copy span {
+  color: #aab6c9;
+}
+/* /tecnicos uses inline styles: normalize its cards, controls and status chips in dark mode */
+html.dark-mode main[style*="var(--background"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+html.dark-mode main[style*="var(--background"] section {
+  background-color: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+html.dark-mode main[style*="var(--background"] button:not([style*="background: rgb(51, 77, 230)"]) {
+  color: var(--foreground);
+  border-color: var(--border);
+}
+html.dark-mode main[style*="var(--background"] p,
+html.dark-mode main[style*="var(--background"] h1,
+html.dark-mode main[style*="var(--background"] h2,
+html.dark-mode main[style*="var(--background"] h3,
+html.dark-mode main[style*="var(--background"] h4,
+html.dark-mode main[style*="var(--background"] label,
+html.dark-mode main[style*="var(--background"] small,
+html.dark-mode main[style*="var(--background"] b,
+html.dark-mode main[style*="var(--background"] span {
+  color: inherit;
+}
+html.dark-mode main[style*="var(--background"] [style*="background: rgb(231, 248, 239)"],
+html.dark-mode main[style*="var(--background"] [style*="background: rgb(231, 248, 239)"] * {
+  background-color: #12372b !important;
+  color: #a7f3d0 !important;
+}
+html.dark-mode main[style*="var(--background"] [style*="background: rgb(232, 238, 252)"] {
+  background-color: #26334b !important;
+  color: #c7d2fe !important;
+}
+html.dark-mode main[style*="var(--background"] [style*="background: rgb(255, 255, 255)"] {
+  background-color: var(--card) !important;
+}
+@media (max-width: 640px) {
+  .global-theme-toggle { right: 12px; bottom: 12px; padding: 10px 12px; }
+  html.dark-mode main[style*="var(--background"] { padding: 16px !important; }
+}
