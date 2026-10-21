@@ -1,37 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-async function validSession(token?: string) {
+async function readSession(token?: string) {
   const secret = process.env.SESSION_SECRET;
-  if (!token || !secret || secret.length < 32) return { valid: false, mustChangePassword: false, role: "" };
+  if (!token || !secret || secret.length < 32) return null;
   try {
     const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
-    return { valid: true, mustChangePassword: payload.mustChangePassword === true, role: typeof payload.role === "string" ? payload.role : "" };
+    if (typeof payload.userId !== "string" || typeof payload.organizationId !== "string") return null;
+    return {
+      userId: payload.userId,
+      role: typeof payload.role === "string" ? payload.role : "",
+      mustChangePassword: payload.mustChangePassword === true,
+    };
   } catch {
-    return { valid: false, mustChangePassword: false, role: "" };
+    return null;
   }
 }
 
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/login/tecnicos",
+  "/api/auth/login",
+  "/api/auth/logout",
+  "/api/auth/change-password",
+  "/api/public/branding",
+]);
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  if (
-    path.startsWith("/login") ||
-    path.startsWith("/api/auth/login") ||
-    path.startsWith("/api/auth/logout") ||
-    path.startsWith("/api/auth/change-password") ||
-    path.startsWith("/api/public/branding") ||
-    path.startsWith("/_next") ||
-    path === "/favicon.ico"
-  ) return NextResponse.next();
 
-  const session = await validSession(request.cookies.get("isp_session")?.value);
-  if (!session.valid) {
-    if (path.startsWith("/api/")) return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
+  // Only explicitly listed authentication/public endpoints are accessible without a session.
+  if (PUBLIC_PATHS.has(path) || path.startsWith("/_next/") || path === "/favicon.ico") {
+    const existingSession = await readSession(request.cookies.get("isp_session")?.value);
+    if (existingSession && !existingSession.mustChangePassword) {
+      if (path === "/login/tecnicos") {
+        return existingSession.role === "TECHNICIAN"
+          ? NextResponse.redirect(new URL("/tecnicos", request.url))
+          : NextResponse.next();
+      }
+      if (path === "/login" && existingSession.role === "TECHNICIAN") {
+        return NextResponse.redirect(new URL("/tecnicos", request.url));
+      }
+    }
+    return NextResponse.next();
+  }
+
+  const session = await readSession(request.cookies.get("isp_session")?.value);
+  if (!session) {
+    if (path.startsWith("/api/")) {
+      return NextResponse.json({ error: "Sessão necessária." }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (session.mustChangePassword && path !== "/alterar-palavra-passe") {
-    if (path.startsWith("/api/")) return NextResponse.json({ error: "Altere a palavra-passe antes de continuar." }, { status: 403 });
+    if (path.startsWith("/api/")) {
+      return NextResponse.json({ error: "Altere a palavra-passe antes de continuar." }, { status: 403 });
+    }
     return NextResponse.redirect(new URL("/alterar-palavra-passe", request.url));
   }
 
@@ -39,17 +64,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Técnicos não podem abrir páginas de administração pela URL direta.
-  if (session.role === "TECHNICIAN" && !path.startsWith("/api/")) {
-    const allowed = ["/tecnico", "/tecnicos", "/ordens", "/estoque", "/frota"];
-    if (!allowed.some(prefix => path === prefix || path.startsWith(prefix + "/") || path.startsWith(prefix + "#"))) {
+  if (session.role === "TECHNICIAN") {
+    const allowed = ["/tecnico", "/tecnicos", "/ordens", "/estoque", "/frota", "/api/auth/me", "/api/auth/logout", "/api/auth/change-password", "/api/orders", "/api/attendance", "/api/inventory", "/api/fleet"];
+    const isAllowed = allowed.some(prefix => path === prefix || path.startsWith(prefix + "/"));
+    if (!isAllowed) {
+      if (path.startsWith("/api/")) {
+        return NextResponse.json({ error: "Acesso não autorizado para técnicos." }, { status: 403 });
+      }
       return NextResponse.redirect(new URL("/tecnicos", request.url));
     }
   }
-  if (session.role === "TECHNICIAN" && path === "/") {
-    return NextResponse.redirect(new URL("/tecnicos", request.url));
-  }
+
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/((?!.*\\..*).*)"] };
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
