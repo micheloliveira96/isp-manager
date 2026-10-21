@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Faça login para continuar." }, { status: 401 });
-  const [vehicles, refills] = await Promise.all([
+  const [vehicles, technicians, refills] = await Promise.all([
     prisma.fleetVehicle.findMany({ where: { organizationId: session.organizationId }, select: { id: true, plate: true, brand: true, model: true, odometerKm: true }, orderBy: { plate: "asc" } }),
+    prisma.technician.findMany({ where: { organizationId: session.organizationId, active: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.fuelRefill.findMany({ where: { organizationId: session.organizationId }, include: { vehicle: { select: { id: true, plate: true, brand: true, model: true } }, technician: { select: { id: true, name: true } } }, orderBy: { refilledAt: "desc" }, take: 500 })
   ]);
   const total = refills.reduce((sum, r) => sum + Number(r.totalCost), 0);
@@ -14,7 +15,7 @@ export async function GET() {
     const entries = refills.filter(r => r.vehicleId === v.id);
     return { ...v, totalCost: entries.reduce((sum, r) => sum + Number(r.totalCost), 0), refillCount: entries.length, lastRefill: entries[0] || null };
   });
-  return NextResponse.json({ vehicles, refills, summary: { totalCost: total, count: refills.length, liters: refills.reduce((sum, r) => sum + Number(r.liters || 0), 0), byVehicle } });
+  return NextResponse.json({ vehicles, technicians, refills, summary: { totalCost: total, count: refills.length, liters: refills.reduce((sum, r) => sum + Number(r.liters || 0), 0), byVehicle } });
 }
 
 export async function POST(request: NextRequest) {
