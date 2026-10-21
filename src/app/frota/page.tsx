@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Truck, CalendarClock, Gauge, CircleAlert, LoaderCircle, Pencil, UserRound, Wrench, CircleCheck, Package, X } from "lucide-react";
+import { ArrowLeft, Plus, Truck, CalendarClock, Gauge, CircleAlert, LoaderCircle, Pencil, UserRound, Wrench, CircleCheck, Package, X, Fuel } from "lucide-react";
 import LogoutButton from "../components/LogoutButton";
 import "./fleet.css";
 
@@ -29,7 +29,7 @@ export default function FleetPage(){
  const active=data.vehicles.filter(v=>v.status==="ACTIVE").length;const maintenance=data.vehicles.filter(v=>v.status==="MAINTENANCE").length;const ipvaDue=data.vehicles.filter(v=>v.status!=="INACTIVE"&&v.ipvaDueDate&&new Date(v.ipvaDueDate).getTime()<Date.now()).length;
  return <main className="fleet-page">
   <header className="fleet-top"><Link href="/" className="fleet-back"><ArrowLeft size={17}/> Painel inicial</Link><div>Operação <LogoutButton/></div></header>
-  <div className="fleet-content"><div className="fleet-heading"><div><small>OPERAÇÃO / VEÍCULOS</small><h1>Gestão de frota</h1><p>Gerencie veículos, motoristas, documentação, pneus, óleo e materiais transportados.</p></div><button onClick={startNew}><Plus size={16}/> Cadastrar veículo</button></div>
+  <div className="fleet-content"><div className="fleet-heading"><div><small>OPERAÇÃO / VEÍCULOS</small><h1>Gestão de frota</h1><p>Gerencie veículos, motoristas, documentação, pneus, óleo e materiais transportados.</p></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Link href="/frota/abastecimentos" style={{display:"inline-flex",alignItems:"center",gap:7,padding:"10px 13px",border:"1px solid #dbe2ec",borderRadius:9,textDecoration:"none",color:"inherit",fontWeight:700}}><Fuel size={16}/> Abastecimentos</Link><button onClick={startNew}><Plus size={16}/> Cadastrar veículo</button></div></div>
   {error&&<div className="fleet-alert error">{error}</div>}{notice&&<div className="fleet-alert success">{notice}</div>}
   <div className="fleet-stats"><article><span>Veículos em operação</span><b>{active}</b><small>Disponíveis para as equipes</small></article><article><span>Em manutenção</span><b>{maintenance}</b><small>Fora de operação temporariamente</small></article><article className={ipvaDue?"fleet-stat-warning":""}><span>IPVA vencido</span><b>{ipvaDue}</b><small>Veículos com vencimento anterior a hoje</small></article><article><span>Total cadastrado</span><b>{data.vehicles.length}</b><small>Inclui veículos inativos</small></article></div>
   {showForm&&<form className="fleet-card fleet-form" onSubmit={save}><header><Truck size={20}/><div><h2>{editingId?"Editar veículo":"Cadastro de veículo"}</h2><p>Informe os dados do veículo e o acompanhamento de manutenção.</p></div><button type="button" className="fleet-close" onClick={()=>{setShowForm(false);setEditingId(null)}} aria-label="Fechar formulário"><X size={17}/></button></header><div className="fleet-fields">
