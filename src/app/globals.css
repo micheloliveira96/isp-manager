@@ -228,3 +228,18 @@ html.dark-mode main[style*="var(--background"] [style*="background: rgb(255, 255
   .global-theme-toggle { right: 12px; bottom: 12px; padding: 10px 12px; }
   html.dark-mode main[style*="var(--background"] { padding: 16px !important; }
 }
+
+
+/* Navegação móvel: drawer consistente, alinhado e adaptado ao tema escuro. */
+.mobile-nav-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1px solid var(--border,#344155);border-radius:10px;background:var(--card,#182234);color:var(--foreground,#e5e7eb);cursor:pointer}
+.mobile-nav-backdrop{position:fixed;inset:0;z-index:1000;display:flex;justify-content:flex-start;background:rgba(3,8,20,.62);backdrop-filter:blur(3px)}
+.mobile-nav-drawer{width:min(320px,88vw);height:100dvh;overflow-y:auto;box-sizing:border-box;padding:18px 14px;background:var(--card,#182234);color:var(--foreground,#e5e7eb);border-right:1px solid var(--border,#344155);box-shadow:12px 0 40px #0003}
+.mobile-nav-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 6px 18px;border-bottom:1px solid var(--border,#344155)}
+.mobile-nav-heading>span{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800}
+.mobile-nav-heading button{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--border,#344155);border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+.mobile-nav-drawer nav{display:grid;gap:5px;padding-top:12px}
+.mobile-nav-drawer nav p{margin:14px 8px 5px;font-size:10px;letter-spacing:.08em;font-weight:800;color:var(--muted-foreground,#9aa8bc)}
+.mobile-nav-drawer nav a{display:flex;align-items:center;gap:11px;min-height:42px;box-sizing:border-box;padding:10px 11px;border-radius:9px;color:var(--foreground,#e5e7eb);text-decoration:none;font-size:13px;font-weight:600;line-height:1.35}
+.mobile-nav-drawer nav a:hover,.mobile-nav-drawer nav a:focus-visible{background:var(--muted,#26334b);outline:none}
+html:not(.dark-mode) .mobile-nav-drawer{--background:#fff;--foreground:#172033;--card:#fff;--border:#e2e8f0;--muted:#eef2ff;--muted-foreground:#64748b}
+@media(min-width:900px){.mobile-nav-trigger{display:inline-flex}}
