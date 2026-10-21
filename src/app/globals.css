@@ -279,3 +279,5 @@ html.dark-mode input::placeholder,html.dark-mode textarea::placeholder{color:#a0
 html.dark-mode button:not(.global-theme-toggle):not(.dash-primary){border-color:#3c4a60}
 @media(max-width:950px){.dash-chart-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.dash-chart-body{padding:18px 12px}.dash-donut{width:160px;height:160px}}
+
+.global-back-nav{position:fixed;left:20px;bottom:20px;z-index:900;filter:drop-shadow(0 5px 15px #0002)}@media(max-width:650px){.global-back-nav{left:12px;bottom:calc(12px + env(safe-area-inset-bottom))}}
