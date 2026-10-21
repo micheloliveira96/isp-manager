@@ -49,22 +49,70 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const id = String(body.id || "");
+    const action = String(body.action || "");
     const status = String(body.status || "");
-    if (!id || !["OPEN", "SCHEDULED", "IN_PROGRESS", "REVIEW", "COMPLETED", "CANCELLED"].includes(status)) return NextResponse.json({ error: "Estado inválido." }, { status: 400 });
-    const existing = await prisma.serviceOrder.findFirst({ where: { id, organizationId: session.organizationId }, select: { id: true, status: true, assignedTeam: true } });
+    if (!id) return NextResponse.json({ error: "Ordem inválida." }, { status: 400 });
+    const existing = await prisma.serviceOrder.findFirst({
+      where: { id, organizationId: session.organizationId },
+      select: { id: true, code: true, status: true, assignedTeam: true, scheduledAt: true }
+    });
     if (!existing) return NextResponse.json({ error: "Ordem não encontrada." }, { status: 404 });
-    if (!(await hasPermission(session, "orders.update"))) return NextResponse.json({ error: "Não tem permissão para atualizar ordens." }, { status: 403 });
-    if (status === "COMPLETED" && !(await hasPermission(session, "orders.approve"))) return NextResponse.json({ error: "A aprovação final exige permissão específica." }, { status: 403 });
-    if (session.role === "TECHNICIAN") {
-      const technician = await prisma.technician.findFirst({ where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } }, include: { team: { select: { name: true } } } });
-      const assignedNames = [session.name, technician?.team?.name].filter((name): name is string => Boolean(name));
-      if (!assignedNames.includes(existing.assignedTeam || "") || !["IN_PROGRESS", "REVIEW"].includes(status)) return NextResponse.json({ error: "Só podes atualizar ordens atribuídas a ti ou à tua equipa para execução ou análise." }, { status: 403 });
+
+    if (!(await hasPermission(session, "orders.update"))) {
+      return NextResponse.json({ error: "Não tem permissão para atualizar ordens." }, { status: 403 });
     }
-    const order = await prisma.serviceOrder.update({ where: { id }, data: { status, completedAt: status === "COMPLETED" ? new Date() : null }, select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true } });
-    await prisma.auditEvent.create({ data: { organizationId: session.organizationId, actorUserId: session.userId, action: "UPDATE_STATUS", entityType: "ServiceOrder", entityId: id, details: { from: existing.status, to: status } } });
+
+    let data: Prisma.ServiceOrderUpdateInput;
+    let auditAction = "UPDATE_STATUS";
+    let details: Record<string, unknown>;
+
+    if (session.role === "TECHNICIAN") {
+      const technician = await prisma.technician.findFirst({
+        where: { organizationId: session.organizationId, active: true, email: { equals: session.email, mode: "insensitive" } },
+        include: { team: { select: { name: true } } }
+      });
+      const assignedNames = [session.name, technician?.team?.name].filter((name): name is string => Boolean(name));
+      if (!existing.assignedTeam || !assignedNames.includes(existing.assignedTeam)) {
+        return NextResponse.json({ error: "Só podes agir sobre ordens atribuídas a ti ou à tua equipa." }, { status: 403 });
+      }
+
+      if (action === "reschedule") {
+        // Devolve a ordem à central/atendente para reagendamento e remove-a da lista do técnico.
+        data = { status: "OPEN", assignedTeam: null, scheduledAt: null, completedAt: null };
+        auditAction = "RESCHEDULE_REQUESTED";
+        details = { from: existing.status, to: "OPEN", assignedTeamCleared: true, scheduledAtCleared: true };
+      } else if (action === "complete") {
+        data = { status: "COMPLETED", completedAt: new Date() };
+        auditAction = "TECHNICIAN_COMPLETED";
+        details = { from: existing.status, to: "COMPLETED" };
+      } else {
+        return NextResponse.json({ error: "Ação inválida para técnico." }, { status: 400 });
+      }
+    } else {
+      if (!["OPEN", "SCHEDULED", "IN_PROGRESS", "REVIEW", "COMPLETED", "CANCELLED"].includes(status)) {
+        return NextResponse.json({ error: "Estado inválido." }, { status: 400 });
+      }
+      if (status === "COMPLETED" && !(await hasPermission(session, "orders.approve"))) {
+        return NextResponse.json({ error: "A aprovação final exige permissão específica." }, { status: 403 });
+      }
+      data = { status, completedAt: status === "COMPLETED" ? new Date() : null };
+      details = { from: existing.status, to: status };
+    }
+
+    const order = await prisma.$transaction(async (tx) => {
+      const updated = await tx.serviceOrder.update({
+        where: { id },
+        data,
+        select: { id: true, code: true, title: true, customerName: true, pppoeUsername: true, address: true, description: true, priority: true, status: true, assignedTeam: true, scheduledAt: true, technology: true, ponPort: true, createdAt: true, completedAt: true }
+      });
+      await tx.auditEvent.create({
+        data: { organizationId: session.organizationId, actorUserId: session.userId, action: auditAction, entityType: "ServiceOrder", entityId: id, details }
+      });
+      return updated;
+    });
     return NextResponse.json({ order: { ...order, phone: null } });
   } catch (error) {
     console.error("Update order failed", error);
-    return NextResponse.json({ error: "Não foi possível atualizar a ordem." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível atualizar a ordem de serviço." }, { status: 500 });
   }
 }
