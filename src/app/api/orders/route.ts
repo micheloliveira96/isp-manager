@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest) {
 
     let data: Prisma.ServiceOrderUpdateInput;
     let auditAction = "UPDATE_STATUS";
-    let details: Record<string, unknown>;
+    let details: Prisma.InputJsonObject;
 
     if (session.role === "TECHNICIAN") {
       const technician = await prisma.technician.findFirst({
