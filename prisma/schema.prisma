@@ -24,6 +24,7 @@ model Organization {
   inventoryProducts InventoryProduct[]
   inventoryAssignments InventoryAssignment[]
   fleetVehicles FleetVehicle[]
+  fuelRefills FuelRefill[]
   clients Client[]
   internetPlans InternetPlan[]
   invoices BillingInvoice[]
@@ -229,6 +230,7 @@ model FleetVehicle {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   inventoryAssignments InventoryAssignment[]
+  fuelRefills FuelRefill[]
   @@unique([organizationId, plate])
   @@index([organizationId, status])
   @@index([driverTechnicianId])
@@ -336,4 +338,26 @@ model AttendanceRecord {
   createdAt      DateTime     @default(now())
   @@index([organizationId, userId, occurredAt])
   @@index([organizationId, eventType, occurredAt])
+}
+
+
+model FuelRefill {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vehicleId      String
+  vehicle        FleetVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  technicianId   String?
+  technician     Technician? @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  refilledAt     DateTime @default(now())
+  odometerKm     Int
+  liters         Decimal? @db.Decimal(10, 2)
+  totalCost      Decimal  @db.Decimal(10, 2)
+  pricePerLiter  Decimal? @db.Decimal(10, 3)
+  station        String?
+  notes          String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  @@index([organizationId, refilledAt])
+  @@index([vehicleId, refilledAt])
 }
