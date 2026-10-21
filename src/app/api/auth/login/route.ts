@@ -8,6 +8,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
+    const audience = String(body.audience || "main");
+    if (audience !== "main" && audience !== "technician") return NextResponse.json({ error: "Tipo de acesso inválido." }, { status: 400 });
     const organizationSlug = String(body.organizationSlug || process.env.DEFAULT_ORGANIZATION_SLUG || "empresa-principal").trim().toLowerCase();
     if (!email || !password || email.length > 200 || password.length > 200) return NextResponse.json({ error: "Digite seu e-mail e sua senha." }, { status: 400 });
     let user = await prisma.user.findFirst({ where: { email, active: true, organization: { slug: organizationSlug } }, include: { organization: true } });
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest) {
         });
       }
     }
+    if (audience === "technician" && user && user.role !== "TECHNICIAN") return NextResponse.json({ error: "Esta página é exclusiva para contas de técnico." }, { status: 403 });
+    if (audience === "main" && user && user.role === "TECHNICIAN") return NextResponse.json({ error: "Utiliza o acesso exclusivo dos técnicos." }, { status: 403 });
     if (!user || user.organization.status !== "active" || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
     }
