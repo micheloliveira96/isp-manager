@@ -39,8 +39,12 @@ export async function PATCH(request:NextRequest) {
   if(body.permissions && typeof body.permissions==="object" && !Array.isArray(body.permissions)){
    const entries=Object.entries(body.permissions as Record<string,unknown>);
    if(entries.some(([code,value])=>!permissionCatalog.some(p=>p.code===code)||typeof value!=="boolean"))return NextResponse.json({error:"Permissões inválidas."},{status:400});
-   await prisma.$transaction(entries.map(([permissionCode,allowed])=>prisma.userPermission.upsert({where:{userId_permissionCode:{userId:id,permissionCode}},update:{allowed:allowed as boolean},create:{userId:id,permissionCode,allowed:allowed as boolean}})));
-   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_PERMISSIONS",entityType:"User",entityId:id,details:{permissions:body.permissions}}});
+   await prisma.$transaction(async tx=>{
+    for(const [permissionCode,allowed] of entries){
+     await tx.userPermission.upsert({where:{userId_permissionCode:{userId:id,permissionCode}},update:{allowed:allowed as boolean},create:{userId:id,permissionCode,allowed:allowed as boolean}});
+    }
+    await tx.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_PERMISSIONS",entityType:"User",entityId:id,details:{permissions:body.permissions}}});
+   });
    return NextResponse.json({ok:true});
   }
   const hasProfileFields=["name","email","role"].some(k=>Object.prototype.hasOwnProperty.call(body,k));
@@ -50,15 +54,29 @@ export async function PATCH(request:NextRequest) {
    if(id===session.userId&&role!=="MANAGER")return NextResponse.json({error:"Não pode retirar o perfil de administrador da sua própria conta."},{status:400});
    const duplicate=await prisma.user.findFirst({where:{organizationId:session.organizationId,email,NOT:{id}}});
    if(duplicate)return NextResponse.json({error:"Já existe um usuário com este email nesta empresa."},{status:409});
-   const updated=await prisma.user.update({where:{id},data:{name,email,role},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true}});
-   await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_USER",entityType:"User",entityId:id,details:{before:{name:user.name,email:user.email,role:user.role},after:{name:updated.name,email:updated.email,role:updated.role}}}});
+   if(user.active&&user.role==="MANAGER"&&role!=="MANAGER"){
+    const activeManagers=await prisma.user.count({where:{organizationId:session.organizationId,role:"MANAGER",active:true}});
+    if(activeManagers<=1)return NextResponse.json({error:"A empresa tem de manter pelo menos um administrador ativo."},{status:400});
+   }
+   const updated=await prisma.$transaction(async tx=>{
+    const changed=await tx.user.update({where:{id},data:{name,email,role},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true}});
+    await tx.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"UPDATE_USER",entityType:"User",entityId:id,details:{before:{name:user.name,email:user.email,role:user.role},after:{name:changed.name,email:changed.email,role:changed.role}}}});
+    return changed;
+   });
    return NextResponse.json({user:updated});
   }
   const active=body.active;
   if(typeof active!=="boolean")return NextResponse.json({error:"Dados inválidos."},{status:400});
   if(id===session.userId&&!active)return NextResponse.json({error:"Não pode desativar a sua própria conta."},{status:400});
-  const updated=await prisma.user.update({where:{id},data:{active},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true}});
-  await prisma.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:active?"ENABLE_USER":"DISABLE_USER",entityType:"User",entityId:id,details:{email:user.email,active}}});
+  if(user.active&&user.role==="MANAGER"&&!active){
+   const activeManagers=await prisma.user.count({where:{organizationId:session.organizationId,role:"MANAGER",active:true}});
+   if(activeManagers<=1)return NextResponse.json({error:"Não é possível desativar o único administrador ativo da empresa."},{status:400});
+  }
+  const updated=await prisma.$transaction(async tx=>{
+   const changed=await tx.user.update({where:{id},data:{active},select:{id:true,name:true,email:true,role:true,active:true,createdAt:true}});
+   await tx.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:active?"ENABLE_USER":"DISABLE_USER",entityType:"User",entityId:id,details:{email:user.email,active}}});
+   return changed;
+  });
   return NextResponse.json({user:updated});
  }catch(error){console.error("Update user failed",error);return NextResponse.json({error:"Não foi possível alterar o usuário."},{status:500})}
 }
