@@ -18,6 +18,7 @@ async function readSession(token?: string) {
 }
 
 const PUBLIC_PATHS = new Set([
+  "/api/mikrotik/agent",
   "/login",
   "/login/tecnicos",
   "/api/auth/login",
