@@ -3,7 +3,7 @@
 .git
 node_modules
 .next
-agent
-tests
+/agent
+/tests
 *.tsbuildinfo
 backups
