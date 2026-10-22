@@ -1,0 +1,25 @@
+name: isp-mikrotik-connector
+services:
+  agent:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      GATEWAY_URL: http://mikrotik-gateway:8088
+      AGENT_DATA_DIR: /data
+    volumes:
+      - agent-state:/data
+    networks: [lab]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "const fs=require('fs');process.exit(Date.now()-Number(fs.readFileSync('/data/heartbeat','utf8'))<90000?0:1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks:
+  lab:
+    external: true
+    name: mikrotik-lab_lab
+volumes:
+  agent-state:
