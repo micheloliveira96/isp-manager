@@ -34,6 +34,10 @@ export async function getSession(): Promise<SessionUser | null> {
 export const sessionCookieName = COOKIE_NAME;
 export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
 export const permissionCatalog = [
+  { code: "mikrotik.view", label: "Consultar MikroTik e sessões PPPoE" },
+  { code: "mikrotik.manage", label: "Cadastrar roteadores e renovar agente MikroTik" },
+  { code: "mikrotik.provision", label: "Provisionar PPPoE, senhas e planos MikroTik" },
+  { code: "mikrotik.suspend", label: "Bloquear e desbloquear PPPoE no MikroTik" },
   { code: "orders.view", label: "Consultar ordens" },
   { code: "orders.create", label: "Criar ordens" },
   { code: "orders.update", label: "Atualizar e atribuir ordens" },
