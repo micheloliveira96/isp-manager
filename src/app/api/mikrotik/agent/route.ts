@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
+    if (process.env.VERCEL_ENV === 'preview') throw new ApiError(403, 'Agentes devem usar a URL de produção.');
     const bearer = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(req.headers.get("authorization") || "");
     if (!bearer) throw new ApiError(401, "Agente não autorizado.");
     const router = await prisma.mikrotikRouter.findUnique({ where: { agentTokenHash: hash(bearer[1]), enabled: true } });
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
           const state = result.ok ? (job.action === "SUSPEND" ? "SUSPENDED" : ["PROVISION", "REACTIVATE"].includes(job.action) ? "ACTIVE" : undefined) : undefined;
           await tx.mikrotikSubscriber.updateMany({ where: { id: job.subscriberId, organizationId: router.organizationId }, data: { ...(state ? { authStatus: state } : {}), ...(result.ok && job.action === "PLAN" ? { planId: command.planId, profile: command.profile } : {}) } });
         }
-        await tx.auditEvent.create({ data: { organizationId: router.organizationId, actorUserId: job.actorUserId, action: result.ok ? "MIKROTIK_CONFIRMED" : "MIKROTIK_FAILED", entityType: "MikrotikJob", entityId: job.id, details: { operation: job.action, code: result.code, routerId: router.id } } });
+        await tx.auditEvent.create({ data: { organizationId: router.organizationId, actorUserId: job.actorUserId.startsWith('system:') ? null : job.actorUserId, action: result.ok ? "MIKROTIK_CONFIRMED" : "MIKROTIK_FAILED", entityType: "MikrotikJob", entityId: job.id, details: { operation: job.action, code: result.code, routerId: router.id } } });
       });
       return NextResponse.json({ ok: true });
     }

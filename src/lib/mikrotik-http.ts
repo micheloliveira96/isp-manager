@@ -5,6 +5,7 @@ export async function access(permission: string, req?: NextRequest) {
   const s = await getSession();
   if (!s) throw new ApiError(401, "Faça login para continuar.");
   if (!(await hasPermission(s, permission))) throw new ApiError(403, "Sem permissão para esta operação MikroTik.");
+  if (req && process.env.VERCEL_ENV === 'preview') throw new ApiError(403, 'Operações no roteador ficam desativadas em Preview. Use a versão de produção.');
   if (req && req.headers.get("origin") && req.headers.get("origin") !== req.nextUrl.origin) throw new ApiError(403, "Origem não autorizada.");
   return s;
 }

@@ -25,6 +25,7 @@ export default function MobileNav({ manager, technician = false }: { manager: bo
             <Link href="/ordens" onClick={close}><ClipboardList size={18}/> Ordens de serviço</Link>
             <Link href="/clientes" onClick={close}><UserRound size={18}/> Clientes</Link>
             <Link href="/planos" onClick={close}><Gauge size={18}/> Planos de internet</Link>
+            <Link href="/mikrotik" onClick={close}><Wifi size={18}/> MikroTik e PPPoE</Link>
             <Link href="/financeiro" onClick={close}><Wallet size={18}/> Financeiro</Link>
             <Link href="/calendario" onClick={close}><CalendarDays size={18}/> Calendário operacional</Link>
             <p>OPERAÇÃO</p>
