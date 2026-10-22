@@ -95,8 +95,8 @@ export async function DELETE(request:NextRequest) {
    if(user.active&&managers<=1)return NextResponse.json({error:"Não é possível eliminar o único administrador ativo da empresa."},{status:400});
   }
   await prisma.$transaction(async tx=>{
-   await tx.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"DELETE_USER",entityType:"User",entityId:id,details:{name:user.name,email:user.email,role:user.role}}});
-   await tx.user.delete({where:{id}});
+   await tx.user.update({where:{id},data:{active:false}});
+   await tx.auditEvent.create({data:{organizationId:session.organizationId,actorUserId:session.userId,action:"ARCHIVE_USER",entityType:"User",entityId:id,details:{name:user.name,email:user.email,role:user.role}}});
   });
   return NextResponse.json({ok:true,id});
  }catch(error){console.error("Delete user failed",error);return NextResponse.json({error:"Não foi possível eliminar o usuário."},{status:500})}
