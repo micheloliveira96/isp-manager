@@ -303,3 +303,25 @@ html.dark-mode .isp-module-page button[style*="background: white"],html.dark-mod
 html.dark-mode .isp-module-page .section-home-link{background:#202c40;color:#edf2fc;border-color:#3c4a60}
 html.dark-mode .isp-module-page .section-home-link:hover{background:#2c3c59}
 @media(max-width:640px){.isp-module-page{padding:20px 14px 100px!important}.isp-module-page h1{font-size:25px!important}}
+
+
+/* Force consistent dark surfaces even when React inline styles specify white. */
+html.dark-mode .isp-module-page article,
+html.dark-mode .isp-module-page form,
+html.dark-mode .isp-module-page section,
+html.dark-mode .isp-module-page>div[style*="background"],
+html.dark-mode .isp-module-page>div>div[style*="background"]{background-color:#182234!important;color:#edf2fc!important;border-color:#36445b!important}
+html.dark-mode .isp-module-page article h2,
+html.dark-mode .isp-module-page article strong,
+html.dark-mode .isp-module-page article div,
+html.dark-mode .isp-module-page article span:not([style*="color:"]),
+html.dark-mode .isp-module-page article p:not([style*="color:"]){color:#edf2fc}
+html.dark-mode .isp-module-page article button,
+html.dark-mode .isp-module-page form button[type="button"]{background-color:#25334b!important;color:#edf2fc!important;border-color:#40516b!important}
+html.dark-mode .isp-module-page article button:hover,
+html.dark-mode .isp-module-page form button[type="button"]:hover{background-color:#344865!important}
+html.dark-mode .isp-module-page table thead{background:#202d41!important}
+html.dark-mode .isp-module-page .section-home-link{color:#f0f5ff!important}
+html:not(.dark-mode) .isp-module-page article,
+html:not(.dark-mode) .isp-module-page form,
+html:not(.dark-mode) .isp-module-page section{color:#172033}
