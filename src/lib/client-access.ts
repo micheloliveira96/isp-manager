@@ -65,8 +65,9 @@ const commandFor = (sub: MikrotikSubscriber, plan: {id: string; downloadMbps: nu
 export async function clientAction(s: SessionUser, clientId: string, b: Record<string, unknown>, requestKey: string) {
   if (!/^[A-Za-z0-9-]{16,100}$/.test(requestKey)) throw new ApiError(400, "Chave de idempotência obrigatória.");
   const action = String(b.action);
-  const fp = fingerprint({clientId, ...b});
+  const fp = fingerprint({...b, clientId});
   return prisma.$transaction(async tx => {
+    if(await tx.mikrotikSubscriber.count({where: {clientId, organizationId: s.organizationId}}) > 1) throw new ApiError(409, "Cliente com vários vínculos PPPoE. Revise os roteadores antes de gerenciar o acesso pela ficha.");
     const initial = await tx.mikrotikSubscriber.findFirst({where: {clientId, organizationId: s.organizationId}});
     if (!initial) throw new ApiError(409, "Cadastre o vínculo PPPoE na edição do cliente primeiro.");
     await lockRouter(tx, initial.routerId, s.organizationId);

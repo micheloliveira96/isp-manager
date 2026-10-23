@@ -37,6 +37,7 @@ export async function POST(req: NextRequest, context: {params: Promise<{id: stri
   if(action === "REVIEW") {
    if(b.confirm !== true) throw new ApiError(400, "Confirme a revisão do vínculo e o armazenamento da senha, sem alterar o roteador.");
    await prisma.$transaction(async tx => {
+    if(await tx.mikrotikSubscriber.count({where: {clientId: id, organizationId: s.organizationId}}) > 1) throw new ApiError(409, "Existem vários vínculos. Revise os roteadores antes de importar o acesso.");
     const initial = await tx.mikrotikSubscriber.findFirst({where: {clientId: id, organizationId: s.organizationId}});
     if(!initial) throw new ApiError(404, "Vínculo antigo não encontrado.");
     await lockRouter(tx, initial.routerId, s.organizationId);
@@ -49,7 +50,8 @@ export async function POST(req: NextRequest, context: {params: Promise<{id: stri
     const user = snapshot.users?.find(u => u.name === sub.username);
     if(!user || user.comment !== "isp-manager:" + sub.id || user.profile !== sub.profile) throw new ApiError(409, "Propriedade/perfil não confirmados. Nenhum acesso antigo foi modificado.");
     await tx.mikrotikSubscriber.update({where: {id: sub.id}, data: {managedLifecycle: true, credentialCipher: encrypt({password: clientPassword(b.pppoePassword)}), accessState: user.disabled === "true" ? "SUSPENDED" : "ACTIVE", syncState: "CONFIRMED"}});
-    await auditAccess(tx, s, "CLIENT_LEGACY_LINK_REVIEWED", id, {routerId: sub.routerId, subscriberId: sub.id});
+    await tx.client.update({where: {id}, data: {planId: sub.planId}});
+    await auditAccess(tx, s, "CLIENT_LEGACY_LINK_REVIEWED", id, {routerId: sub.routerId, subscriberId: sub.id, planId: sub.planId});
    });
    return NextResponse.json({ok: true});
   }
