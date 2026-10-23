@@ -39,14 +39,18 @@ async function start() {
       }
       const snapshot = Date.now() - lastSnapshot >= 30000 ? await collect(gw) : undefined;
       if (snapshot) lastSnapshot = Date.now();
-      const reply = await send({ type: 'poll', ...(snapshot ? { snapshot } : {}) });
+      const reply = await send({ type: 'poll', protocolVersion: 2, ...(snapshot ? { snapshot } : {}) });
       if (snapshot) fs.writeFileSync(snapshotClock, String(lastSnapshot));
       if (reply.job) {
         const job = reply.job;
         save({ id: job.id, lease: job.lease, stage: 'started' });
         let result;
-        try { await execute(job, gw); result = { ok: true, code: 'CONFIRMED' }; }
-        catch (e) { result = { ok: false, code: e.status === 409 ? 'OWNERSHIP_CONFLICT' : 'NOT_CONFIRMED' }; }
+        const guardedGateway = async (method, p, body) => {
+          if(job.action.startsWith('ACCESS_') && method !== 'GET') await send({type: 'authorize', jobId: job.id, lease: job.lease});
+          return gw(method, p, body);
+        };
+        try { await execute(job, guardedGateway); result = { ok: true, code: 'CONFIRMED' }; }
+        catch (e) { result = { ok: false, code: e.status === 409 ? 'OWNERSHIP_CONFLICT' : e.status === 422 ? 'RADIUS_UNSUPPORTED' : 'NOT_CONFIRMED' }; }
         save({ id: job.id, lease: job.lease, stage: 'done', result });
         console.log('Operação', job.id, result.code);
         lastSnapshot = 0;

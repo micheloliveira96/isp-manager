@@ -9,7 +9,7 @@ export async function GET() {
     const s = await access("mikrotik.view");
     const [routers, subscribers, jobs, clients, plans] = await Promise.all([
       prisma.mikrotikRouter.findMany({ where: { organizationId: s.organizationId }, select: { id: true, name: true, enabled: true, routerOnline: true, lastSeenAt: true, snapshotAt: true, snapshot: true }, orderBy: { name: "asc" } }),
-      prisma.mikrotikSubscriber.findMany({ where: { organizationId: s.organizationId }, select: { id: true, routerId: true, clientId: true, planId: true, username: true, profile: true, authStatus: true, client: { select: { name: true, status: true } }, plan: { select: { name: true } } }, take: 1000 }),
+      prisma.mikrotikSubscriber.findMany({ where: { organizationId: s.organizationId }, select: { id: true, routerId: true, clientId: true, planId: true, username: true, profile: true, authStatus: true, managedLifecycle: true, client: { select: { name: true, status: true } }, plan: { select: { name: true } } }, take: 1000 }),
       prisma.mikrotikJob.findMany({ where: { organizationId: s.organizationId }, select: { id: true, routerId: true, subscriberId: true, action: true, status: true, result: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 100 }),
       prisma.client.findMany({ where: { organizationId: s.organizationId }, select: { id: true, name: true, number: true }, orderBy: { name: "asc" }, take: 1000 }),
       prisma.internetPlan.findMany({ where: { organizationId: s.organizationId, active: true }, select: { id: true, name: true, downloadMbps: true, uploadMbps: true }, orderBy: { name: "asc" } }),

@@ -14,6 +14,7 @@ export async function enqueue(s: SessionUser, input: Record<string, unknown>, re
     if (prior) { if (prior.fingerprint !== fp) throw new ApiError(409, "Chave já usada para outra operação."); return { id: prior.id, status: prior.status }; }
     const router = await tx.mikrotikRouter.findFirst({ where: { id: String(input.routerId || ""), organizationId: s.organizationId, enabled: true } });
     if (!router) throw new ApiError(404, "Roteador não encontrado nesta empresa.");
+    await tx.$queryRaw`SELECT id FROM "MikrotikRouter" WHERE id = ${router.id} FOR UPDATE`;
     if (!fresh(router.lastSeenAt) || !router.routerOnline) throw new ApiError(409, "Conecte o agente e confirme o MikroTik online antes de enviar comandos.");
     if (await tx.mikrotikJob.count({ where: { routerId: router.id, status: { in: ["PENDING", "RUNNING"] } } }) >= 20) throw new ApiError(429, "Aguarde as operações pendentes.");
     let subscriberId: string | undefined;
@@ -23,6 +24,7 @@ export async function enqueue(s: SessionUser, input: Record<string, unknown>, re
         const client = await tx.client.findFirst({ where: { id: String(input.clientId || ""), organizationId: s.organizationId } });
         const plan = await tx.internetPlan.findFirst({ where: { id: String(input.planId || ""), organizationId: s.organizationId, active: true } });
         if (!client || !plan) throw new ApiError(404, "Cliente ou plano não encontrado nesta empresa.");
+        if (client.installationState !== "LEGACY" || await tx.mikrotikSubscriber.count({where: {clientId: client.id, managedLifecycle: true}})) throw new ApiError(409, "Use a ficha do cliente para confirmar instalação e ativar o acesso.");
         const username = name(input.username), secret = password(input.password);
         const subscriber = await tx.mikrotikSubscriber.create({ data: { organizationId: s.organizationId, routerId: router.id, clientId: client.id, planId: plan.id, username, profile: 'isp-' + plan.id } });
         subscriberId = subscriber.id;
@@ -34,6 +36,7 @@ export async function enqueue(s: SessionUser, input: Record<string, unknown>, re
       } else if (action !== "REFRESH") {
         const subscriber = await tx.mikrotikSubscriber.findFirst({ where: { id: String(input.subscriberId || ""), routerId: router.id, organizationId: s.organizationId } });
         if (!subscriber) throw new ApiError(404, "Vínculo PPPoE não encontrado nesta empresa.");
+        if (subscriber.managedLifecycle) throw new ApiError(409, "Este acesso é gerenciado pela ficha do cliente. Use as ações na página Clientes.");
         if (await tx.mikrotikJob.count({ where: { subscriberId: subscriber.id, status: { in: ["PENDING", "RUNNING", "UNKNOWN"] } } })) throw new ApiError(409, "Existe uma operação pendente ou incerta para este usuário; confira o estado antes de continuar.");
         subscriberId = subscriber.id;
         command = { username: subscriber.username, owner: subscriber.id };
