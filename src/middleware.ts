@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (session.role === "TECHNICIAN") {
-    const allowed = ["/tecnico", "/tecnicos", "/ordens", "/estoque", "/frota", "/api/auth/me", "/api/auth/logout", "/api/auth/change-password", "/api/orders", "/api/attendance", "/api/inventory", "/api/fleet"];
+    const allowed = ["/clientes", "/api/clients", "/tecnico", "/tecnicos", "/ordens", "/estoque", "/frota", "/api/auth/me", "/api/auth/logout", "/api/auth/change-password", "/api/orders", "/api/attendance", "/api/inventory", "/api/fleet"];
     const isAllowed = allowed.some(prefix => path === prefix || path.startsWith(prefix + "/"));
     if (!isAllowed) {
       if (path.startsWith("/api/")) {

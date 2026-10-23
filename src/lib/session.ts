@@ -34,6 +34,13 @@ export async function getSession(): Promise<SessionUser | null> {
 export const sessionCookieName = COOKIE_NAME;
 export const sessionCookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 8 };
 export const permissionCatalog = [
+  { code: "clients.view", label: "Consultar clientes e situação do acesso" },
+  { code: "clients.manage", label: "Cadastrar e editar clientes" },
+  { code: "clients.credentials", label: "Cadastrar, consultar e editar credenciais PPPoE" },
+  { code: "clients.install", label: "Confirmar instalação de cliente" },
+  { code: "clients.activate", label: "Ativar definitivamente o acesso" },
+  { code: "clients.suspend", label: "Desativar o acesso" },
+  { code: "clients.grace", label: "Conceder 72 horas de carência" },
   { code: "mikrotik.view", label: "Consultar MikroTik e sessões PPPoE" },
   { code: "mikrotik.manage", label: "Cadastrar roteadores e renovar agente MikroTik" },
   { code: "mikrotik.provision", label: "Provisionar PPPoE, senhas e planos MikroTik" },
@@ -49,7 +56,7 @@ export const permissionCatalog = [
 
 const roleDefaults: Record<string, string[]> = {
   MANAGER: permissionCatalog.map(p => p.code),
-  ATTENDANT: ["orders.view", "orders.create", "orders.update"],
+  ATTENDANT: ["clients.view", "orders.view", "orders.create", "orders.update"],
   TECHNICIAN: ["orders.view", "orders.update"]
 };
 

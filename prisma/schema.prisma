@@ -273,6 +273,9 @@ model Client {
   @@index([organizationId, phone])
   @@index([organizationId, email])
   @@index([organizationId, status])
+  installationState       String               @default("LEGACY")
+  installationConfirmedAt DateTime?
+  installationConfirmedBy String?
 }
 
 model InternetPlan {
@@ -427,6 +430,14 @@ model MikrotikSubscriber {
   @@unique([routerId, clientId])
   @@unique([organizationId, id])
   @@index([organizationId, clientId])
+  managedLifecycle Boolean        @default(false)
+  credentialCipher String?        @db.Text
+  accessState      String         @default("WAITING")
+  syncState        String         @default("CONFIRMED")
+  syncMessage      String?
+  revision         Int            @default(0)
+  graceStartedAt   DateTime?
+  graceExpiresAt   DateTime?
 }
 
 model MikrotikJob {
@@ -451,4 +462,8 @@ model MikrotikJob {
   createdAt DateTime @default(now())
   @@unique([organizationId, requestKey])
   @@index([routerId, status, createdAt])
+  lifecycleRevision Int?
+  lifecycleTarget   String?
+  retryAt           DateTime?
+  attempts          Int                 @default(0)
 }

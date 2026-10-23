@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ApiError, body, fail } from "@/lib/mikrotik-http";
 import { decrypt, hash, safeResult, safeSnapshot, token } from "@/lib/mikrotik-security";
+import { lockRouter, scheduleGrace } from "@/lib/client-access";
+import { acknowledgeAccess } from "@/lib/client-access-worker";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
@@ -14,13 +16,25 @@ export async function POST(req: NextRequest) {
     const active = await prisma.organization.count({ where: { id: router.organizationId, status: "active" } });
     if (!active) throw new ApiError(403, "Empresa inativa.");
     const b = await body(req);
+    if(b.type === "authorize") {
+      const allowed = await prisma.$transaction(async tx => {
+        await lockRouter(tx, router.id, router.organizationId);
+        const job = await tx.mikrotikJob.findFirst({where: {id: String(b.jobId || ""), routerId: router.id, organizationId: router.organizationId, status: "RUNNING", leaseTokenHash: hash(String(b.lease || "")), completedAt: null}, include: {subscriber: true}});
+        return !!job && job.lifecycleRevision !== null && job.subscriber?.managedLifecycle === true && job.lifecycleRevision === job.subscriber.revision;
+      });
+      if(!allowed) throw new ApiError(409, "Comando cancelado ou sem autorização vigente.");
+      return NextResponse.json({ok: true});
+    }
     if (b.type === "ack") {
       const result = safeResult(b.result);
       await prisma.$transaction(async tx => {
+        await lockRouter(tx, router.id, router.organizationId);
         const job = await tx.mikrotikJob.findFirst({ where: { id: String(b.jobId || ""), routerId: router.id, organizationId: router.organizationId, leaseTokenHash: hash(String(b.lease || "")) } });
         if (!job) throw new ApiError(409, "Confirmação inválida.");
         if (job.completedAt) return;
+        if(job.lifecycleRevision !== null && job.result && job.claimedAt === null) return;
         const command = decrypt(job.payloadCipher);
+        if(await acknowledgeAccess(tx, job, result, command)) return;
         await tx.mikrotikJob.update({ where: { id: job.id }, data: { status: result.ok ? "SUCCEEDED" : result.code === "OWNERSHIP_CONFLICT" ? "FAILED" : "UNKNOWN", result, payloadCipher: "", completedAt: new Date() } });
         if (job.subscriberId) {
           const state = result.ok ? (job.action === "SUSPEND" ? "SUSPENDED" : ["PROVISION", "REACTIVATE"].includes(job.action) ? "ACTIVE" : undefined) : undefined;
@@ -37,17 +51,27 @@ export async function POST(req: NextRequest) {
     const job = await prisma.$transaction(async tx => {
       // Serializa claims do mesmo roteador mesmo com duas instâncias do agente.
       await tx.$queryRaw`SELECT id FROM "MikrotikRouter" WHERE id = ${router.id} FOR UPDATE`;
+      await scheduleGrace(tx, router.id, router.organizationId);
       await tx.mikrotikJob.updateMany({ where: { routerId: router.id, status: "PENDING", expiresAt: { lt: new Date() } }, data: { status: "EXPIRED", payloadCipher: "", completedAt: new Date() } });
       await tx.mikrotikJob.updateMany({ where: { routerId: router.id, status: "RUNNING", claimedAt: { lt: new Date(Date.now() - 120000) } }, data: { status: "UNKNOWN" } });
+      await tx.mikrotikSubscriber.updateMany({where: {routerId: router.id, managedLifecycle: true, jobs: {some: {status: "UNKNOWN"}}}, data: {syncState: "ERROR", syncMessage: "Agente interrompido: resultado incerto. Confira o roteador e revise a operação."}});
       if (await tx.mikrotikJob.count({ where: { routerId: router.id, status: { in: ["RUNNING", "UNKNOWN"] } } })) return null;
-      const next = await tx.mikrotikJob.findFirst({ where: { routerId: router.id, organizationId: router.organizationId, status: "PENDING", expiresAt: { gt: new Date() } }, orderBy: { createdAt: "asc" } });
+      const next = await tx.mikrotikJob.findFirst({ where: { routerId: router.id, organizationId: router.organizationId, status: "PENDING", expiresAt: { gt: new Date() }, OR: [{retryAt: null}, {retryAt: {lte: new Date()}}] }, orderBy: { createdAt: "asc" } });
       if (!next) return null;
+      if(next.lifecycleRevision !== null) {
+        if(b.protocolVersion !== 2) return null;
+        const sub = await tx.mikrotikSubscriber.findUnique({where: {id: next.subscriberId!}});
+        if(!sub?.managedLifecycle || sub.revision !== next.lifecycleRevision || (next.action === "ACCESS_EXPIRE" && (sub.accessState !== "GRACE" || !sub.graceExpiresAt || sub.graceExpiresAt > new Date()))) {
+          await tx.mikrotikJob.update({where: {id: next.id}, data: {status: "CANCELLED", payloadCipher: "", completedAt: new Date()}});
+          return null;
+        }
+      }
       // Sem dados reais online, não executar comandos acumulados.
       const current = await tx.mikrotikRouter.findUniqueOrThrow({ where: { id: router.id } });
       if (!current.routerOnline || !current.snapshotAt || Date.now() - current.snapshotAt.getTime() > 90000) return null;
       const payload = decrypt(next.payloadCipher);
       await tx.mikrotikJob.update({ where: { id: next.id }, data: { status: "RUNNING", claimedAt: new Date(), leaseTokenHash: hash(lease) } });
-      return { id: next.id, action: next.action, payload, lease };
+      return { id: next.id, action: next.action, payload, lease, target: next.lifecycleTarget };
     });
     return NextResponse.json({ job, pollSeconds: 10 }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) { return fail(e); }

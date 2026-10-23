@@ -10,7 +10,7 @@ const keys = JSON.parse(fs.readFileSync(base + '/mikrotik-cloud-keys.json', 'utf
 const [iv, tag, data] = backup.cipher.split('.').map(s => Buffer.from(s, 'base64'));
 const cipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(keys.previewKey, 'base64'), iv); cipher.setAuthTag(tag);
 const dump = JSON.parse(Buffer.concat([cipher.update(data), cipher.final()]).toString('utf8'));
-if (dump.format !== 'isp-pg-backup-v1' || !/^postgresql:\/\/[^@]+@127\.0\.0\.1:55437\/isp_test\?schema=cloud_restore(?:_after)?$/.test(process.env.DATABASE_URL || '')) throw new Error('Destino de restauração deve ser exclusivamente o schema cloud_restore da base isolada.');
+if (dump.format !== 'isp-pg-backup-v1' || !/^postgresql:\/\/[^@]+@127\.0\.0\.1:55437\/isp_test\?schema=cloud_restore(?:_after|_lifecycle_before|_lifecycle_after)?$/.test(process.env.DATABASE_URL || '')) throw new Error('Destino de restauração deve ser exclusivamente o schema cloud_restore da base isolada.');
 const prisma = new PrismaClient(); const quote = s => '"' + s.replace(/"/g, '""') + '"';
 (async () => {
   const pending = Object.keys(dump.data).filter(t => t !== '_prisma_migrations'); const done = new Set();
