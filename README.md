@@ -1,5 +1,17 @@
 # ISP Manager
 
+## Integração MikroTik
+
+O painel `/mikrotik` administra login e senha PPPoE, planos, bloqueio, desbloqueio
+e desconexão por um agente local com conexão HTTPS de saída para a Vercel.
+As credenciais do RouterOS permanecem no gateway local. O histórico distingue
+solicitações na fila de operações confirmadas no roteador.
+
+Consulte [o guia de instalação, uso, testes e backups](docs/MIKROTIK-COMO-USAR.md).
+No Windows do laboratório, `agent/CONFIGURAR-AGENTE.cmd` permite configurar a
+comunicação sem editar arquivos manualmente. A automação financeira permanece
+desativada e a versão Preview não executa comandos no roteador.
+
 Plataforma de gestão operacional para provedores de Internet, preparada para personalização por empresa e instalação em servidor próprio.
 
 ## Instalação simplificada no mini-PC Windows
